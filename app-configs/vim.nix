@@ -7,7 +7,19 @@
       name = "vim";
       # Install plugins for example for syntax highlighting of nix files
       vimrcConfig.packages.myplugins = with pkgs.vimPlugins; {
-        start = [ vim-nix vim-lastplace vim-airline gruvbox ale ];
+        start = [ YouCompleteMe vim-nix vim-lastplace vim-airline gruvbox ale
+          (pkgs.vimUtils.buildVimPlugin {
+            name = "vim-ai";
+            src = pkgs.fetchFromGitHub {
+              owner = "madox2";
+              repo = "vim-ai";
+              rev = "master";
+              #nix-prefetch url https://github.com/madox2/vim-ai/archive/master.tar.gz
+              sha256 = "sha256-ywnBM2YBysrs5EF0lpxKH0cYXJZvFgL+F9f+kCuiFJ8=";
+
+            };
+          })
+        ];
         opt = [];
       };
       vimrcConfig.customRC = ''
@@ -25,7 +37,6 @@
         set noundofile
         set swapfile
         set dir=~/.vim/tmp//
-        silent autocmd CursorHold * :call gitblame#echo()
         set cmdheight=2
 
         let g:ale_linters = {
@@ -34,6 +45,17 @@
 
         packloadall
         silent! helptags ALL
+        let g:vim_ai_token_file_path = '~/.config/openai.token'
+
+        let g:vim_ai_chat = {
+          \  "options": {
+          \    "model": "gpt-3.5-turbo",
+          \    "stream": 0,
+          \    "temperature": 1,
+          \    "max_completion_tokens": 2048,
+          \    "initial_prompt": "Hello, as my AI assistant I would like you to be like Jarvis from ironman. Whitty, smart, and concise. I am a programmer so most things I ask will be centered around that but I also like philosphy, consumer tech, and food." 
+          \  },
+        \}
       '';
     }
   )];
