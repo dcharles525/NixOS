@@ -7,7 +7,7 @@
       name = "vim";
       # Install plugins for example for syntax highlighting of nix files
       vimrcConfig.packages.myplugins = with pkgs.vimPlugins; {
-        start = [ YouCompleteMe vim-nix vim-lastplace vim-airline gruvbox ale
+        start = [ nerdtree vim-go vim-nix vim-lastplace vim-airline gruvbox ale
           (pkgs.vimUtils.buildVimPlugin {
             name = "vim-ai";
             src = pkgs.fetchFromGitHub {
@@ -26,6 +26,7 @@
         syntax on
         filetype plugin indent on
         inoremap <Esc> <Esc>:w<CR>
+        set backspace=indent,eol,start
         set tabstop=2 shiftwidth=2 expandtab
         set autoindent 
         set smartindent
@@ -37,7 +38,6 @@
         set noundofile
         set swapfile
         set dir=~/.vim/tmp//
-        set cmdheight=2
 
         let g:ale_linters = {
           \'javascript': ['eslint'],
@@ -45,6 +45,7 @@
 
         packloadall
         silent! helptags ALL
+        au filetype go inoremap <buffer> . .<C-x><C-o>
         let g:vim_ai_token_file_path = '~/.config/openai.token'
 
         let g:vim_ai_chat = {
