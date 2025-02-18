@@ -110,6 +110,7 @@
     unstable.ghostty
     nodejs
     nextcloud-client
+    circumflex
   ];
 
   programs.vim.enable = true;
