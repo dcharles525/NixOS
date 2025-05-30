@@ -17,23 +17,7 @@
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
-  home.packages = [
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
-    # pkgs.hello
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
-
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
+  home.packages = [ 
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -83,10 +67,16 @@
       $fileManager = dolphin
       $menu = wofi --show drun
 
-      exec-once=bash ~/.config/hypr/start.sh
+      #exec-once=bash ~/.config/hypr/start.sh
+      exec-once=waybar
 
+      cursor {
+        enable_hyprcursor = false
+      }
+
+      env = XCURSOR_THEME,Whiteglass
       env = XCURSOR_SIZE,24
-      env = HYPRCURSOR_SIZE,24
+      #env = HYPRCURSOR_SIZE,24
 
       general {
         gaps_in = 5
@@ -94,7 +84,7 @@
 
         border_size = 2
 
-        col.active_border = rgba(33ccffee) rgba(00ff99ee) 45deg
+        col.active_border = rgba(00ff99ee)
         col.inactive_border = rgba(595959aa)
 
         resize_on_border = false
@@ -202,6 +192,8 @@
       bind = $mainMod, R, exec, $menu
       bind = $mainMod, P, pseudo, # dwindle
       bind = $mainMod, J, togglesplit, # dwindle
+      bind = $mainMod, L, exec, hyprlock
+      bind = $mainMod, N, exec, iwmenu -l rofi
 
       bind = $mainMod, left, movefocus, l
       bind = $mainMod, right, movefocus, r
@@ -262,5 +254,101 @@
 
       windowrulev2 = nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0
     '';
+  };
+  
+  programs.hyprlock = {
+    enable = true;
+    extraConfig = ''
+      # BACKGROUND
+      background {
+        monitor = 
+        blur_passes = 2
+      }
+      
+      # GENERAL
+      general {
+          hide_cursor = false
+          grace = 0
+      }
+
+      # INPUT FIELD
+      input-field {
+          monitor =
+          size = 250, 60
+          outline_thickness = 2
+          dots_size = 0.2 # Scale of input-field height, 0.2 - 0.8
+          dots_spacing = 0.35 # Scale of dots' absolute size, 0.0 - 1.0
+          dots_center = true
+          outer_color = rgba(0, 0, 0, 0)
+          inner_color = rgba(0, 0, 0, 0.2)
+          font_color = rgba(255,255,255,1)
+          fade_on_empty = false
+          rounding = -1
+          check_color = rgb(204, 136, 34)
+          placeholder_text = <i><span foreground="##cdd6f4">Input Password...</span></i>
+          hide_input = false
+          position = 0, -200
+          halign = center
+          valign = center
+      }
+
+      # DATE
+      label {
+        monitor =
+        text = cmd[update:1000] echo "$(date +"%A, %B %d")"
+        color = rgba(242, 243, 244, 0.75)
+        font_size = 22
+        font_family = JetBrains Mono
+        position = 0, 300
+        halign = center
+        valign = center
+      }
+
+      # TIME
+      label {
+        monitor = 
+        text = cmd[update:1000] echo "$(date +"%-I:%M")"
+        color = rgba(242, 243, 244, 0.75)
+        font_size = 95
+        font_family = JetBrains Mono Extrabold
+        position = 0, 200
+        halign = center
+        valign = center
+      }
+    '';
+  };
+
+  services.hypridle.enable = true;
+  services.hypridle.settings = {
+    general = {
+      lock_cmd = "hyprlock";
+      before_sleep_cmd = "loginctl lock-session";
+      after_sleep_cmd = "hyprctl dispatch dpms on";
+    };
+    listener = [
+      {
+        timeout = 150;
+        on-timeout = "brightnessctl -s set 10";
+        on-resume = "brightnessctl -r";
+      }
+      { 
+        timeout = 150;
+        on-timeout = "brightnessctl -sd rgb:kbd_backlight set 0";
+        on-resume = "brightnessctl -rd rgb:kbd_backlight";
+      }
+      {
+        timeout = 300;
+        on-timeout = "loginctl lock-session";
+      }
+      {
+        timeout = 330;
+        on-timeout = "hyprctl dispatch dpms off";
+        on-resume = "hyprctl dispatch dpms on && brightnessctl -r";
+      }
+      {
+        timeout = 1800;
+        on-timeout = "systemctl suspend";
+      }
+    ];
   };
 }

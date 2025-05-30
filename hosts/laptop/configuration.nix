@@ -2,6 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
+
 { config, pkgs, inputs, ... }:
 
 {
@@ -21,7 +22,6 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  security.pam.services.hyprlock = {};
   services.displayManager.ly.enable = true;
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -33,6 +33,7 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+  networking.wireless.iwd.enable = true;
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -68,6 +69,21 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
+  hardware.graphics = {
+    enable = true;
+  };
+
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = false;
+    powerManagement.finegrained = false;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  services.xserver.videoDrivers = [ "nvidia" ];
+
   # Enable sound with pipewire.
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
@@ -83,6 +99,8 @@
     # no need to redefine it in your config for now)
     #media-session.enable = true;
   };
+
+  security.pam.services.hyprlock = {};
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
@@ -118,7 +136,7 @@
     tmux
     k9s
     go
-    #unstable.ghostty
+    ghostty
     nodejs
     nextcloud-client
     circumflex
@@ -129,6 +147,8 @@
     swww
     rofi-wayland
     nautilus
+    iwd
+    inputs.iwmenu.packages.${pkgs.system}.default
   ];
 
   fonts.packages = with pkgs; [

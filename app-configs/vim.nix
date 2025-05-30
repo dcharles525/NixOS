@@ -15,7 +15,7 @@
               repo = "vim-ai";
               rev = "master";
               #nix-prefetch url https://github.com/madox2/vim-ai/archive/master.tar.gz
-              sha256 = "sha256-ywnBM2YBysrs5EF0lpxKH0cYXJZvFgL+F9f+kCuiFJ8=";
+              sha256 = "sha256-YtiZh/nyA/HbhLyTc4iCnP46Sr598IMk3HnTDrWOij4=";
 
             };
           })
