@@ -146,7 +146,6 @@
     nodejs
     circumflex
     tailscale
-    swaybg
     waybar
     dunst
     libnotify
@@ -170,7 +169,9 @@
     rpi-imager
     partclone
     postman
+    hyprpaper
     hyprshot
+    qimgv
     catppuccin-cursors.mochaMauve
     inputs.iwmenu.packages.${pkgs.system}.default
   ];

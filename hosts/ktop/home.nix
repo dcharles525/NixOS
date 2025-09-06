@@ -87,14 +87,6 @@
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
-  wayland.windowManager.sway.enable = true;
-
-  wayland.windowManager.sway.config.startup = [
-    {
-      command = "swaybg -i /home/d/Pictures/background.jpg -m fill"; 
-    }
-  ];
-    
   wayland.windowManager.hyprland = {
     enable = true;
     extraConfig = ''
@@ -122,7 +114,7 @@
 
         border_size = 2
 
-        col.active_border = rgba(00ff99ee)
+        col.active_border = rgba(FFD865ee)
         col.inactive_border = rgba(595959aa)
 
         resize_on_border = false
@@ -361,6 +353,21 @@
         valign = center
       }
     '';
+  };
+
+  services.hyprpaper.enable = true;
+  services.hyprpaper.settings = {
+    ipc = "on";
+    splash = false;
+    splash_offset = 2.0;
+
+    preload = [ "/usr/share/background.jpg" ];
+
+    wallpaper = [
+      "eDP-1,/usr/share/background.jpg"
+      "HDMI-A-1,/usr/share/background.jpg"
+      "DP-1,/usr/share/background.jpg"
+    ];
   };
 
   services.hypridle.enable = true;
@@ -604,5 +611,57 @@
         box-shadow: none;
       }
     '';
+  };
+
+  services.dunst = {
+    enable = true;
+    settings = {
+      global = {
+        browser = "${config.programs.firefox.package}/bin/firefox -new-tab";
+        dmenu = "${pkgs.rofi}/bin/rofi -dmenu";
+        follow = "mouse";
+        font = "Droid Sans 10";
+        format = "<b>%s</b>\\n%b";
+        frame_color = "#555555";
+        frame_width = 2;
+        geometry = "500x5-5+30";
+        horizontal_padding = 8;
+        icon_position = "off";
+        line_height = 0;
+        markup = "full";
+        padding = 8;
+        separator_color = "frame";
+        separator_height = 2;
+        transparency = 10;
+        word_wrap = true;
+        corner_radius = 10;
+      };
+
+      urgency_low = {
+        background = "#1d1f21";
+        foreground = "#4da1af";
+        frame_color = "#4da1af";
+        timeout = 10;
+      };
+
+      urgency_normal = {
+        background = "#1d1f21";
+        foreground = "#70a040";
+        frame_color = "#70a040";
+        timeout = 15;
+      };
+
+      urgency_critical = {
+        background = "#1d1f21";
+        foreground = "#dd5633";
+        frame_color = "#dd5633";
+        timeout = 0;
+      };
+
+      shortcuts = {
+        context = "mod4+grave";
+        close = "mod4+shift+space";
+      };
+    };
   };
 }
