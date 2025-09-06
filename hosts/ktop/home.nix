@@ -427,7 +427,9 @@
           "temperature",
           "battery",
           "battery#bat2",
-          "clock"
+          "clock",
+          "custom/suspend",
+          "custom/poweroff"
         ],
         //Modules configuration
 
@@ -510,8 +512,17 @@
           "format": "{:%H:%M | %e %B} ",
           "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
           "format-alt": "{:%Y-%m-%d}"
+        },
+        "custom/suspend": {
+          "format": "⏾",
+          "tooltip-format": "Over 9000",
+          "on-click": "exec systemctl suspend"
+        },
+        "custom/poweroff": {
+          "format": "⏻ ",
+          "tooltip-format": "Over 9000",
+          "on-click": "exec systemctl poweroff"
         }
-
       }
     '';
     ".config/waybar/style.css".text = ''
@@ -563,9 +574,14 @@
       #scratchpad,
       #power-profiles-daemon,
       #language,
+      #poweroff,
       #mpd {
         padding: 0 10px;
         border-radius: 15px;
+      }
+      
+      #suspend {
+        padding: 0 15px;
       }
 
       #clock:hover,
