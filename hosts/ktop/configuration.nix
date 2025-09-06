@@ -171,6 +171,7 @@
     partclone
     postman
     hyprshot
+    catppuccin-cursors.mochaMauve
     inputs.iwmenu.packages.${pkgs.system}.default
   ];
 

@@ -65,11 +65,22 @@
     };
   };
 
+  home.pointerCursor = {
+    enable = true;
+    name = "catppuccin-mocha-dark-cursors"; 
+    package = pkgs.catppuccin-cursors.mochaDark;
+    size = 24;
+  };
+  
   gtk = {
     enable = true;
     theme = {
       name = "Adwaita-dark";
       package = pkgs.gnome-themes-extra;
+    };
+    cursorTheme = {
+      package = pkgs.catppuccin-cursors.mochaDark;
+      name = "pkgs.catppuccin-cursors.mochaDark";
     };
   };
 
