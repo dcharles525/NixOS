@@ -87,6 +87,13 @@
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
+  programs.ghostty.enable = true;
+  programs.ghostty = {
+    settings = {
+      theme = "GruvboxDark";
+    };
+  };
+
   wayland.windowManager.hyprland = {
     enable = true;
     extraConfig = ''
@@ -422,6 +429,7 @@
         "modules-right": [
           "pulseaudio",
           "network",
+          "bluetooth",
           "cpu",
           "memory",
           "temperature",
@@ -478,6 +486,15 @@
           "on-click": "sh ~/scripts/rofi-wifi-menu/rofi-wifi-menu.sh"
 
         },
+        "bluetooth": {
+          "format": " {status}",
+          "format-connected": " {device_alias}",
+          "format-connected-battery": " {device_alias} {device_battery_percentage}%",
+          "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
+          "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
+          "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+          "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
+        },
         "cpu": {
             "format": "  {usage}%",
             "tooltip": true
@@ -516,7 +533,7 @@
         "custom/suspend": {
           "format": "⏾",
           "tooltip-format": "Over 9000",
-          "on-click": "exec systemctl suspend"
+          "on-click": "hyprlock & sleep 1; systemctl suspend"
         },
         "custom/poweroff": {
           "format": "⏻ ",
@@ -565,6 +582,7 @@
       #temperature,
       #backlight,
       #network,
+      #bluetooth,
       #pulseaudio,
       #wireplumber,
       #custom-media,
@@ -574,18 +592,16 @@
       #scratchpad,
       #power-profiles-daemon,
       #language,
-      #poweroff,
+      #custom-poweroff,
+      #custom-suspend,
       #mpd {
         padding: 0 10px;
         border-radius: 15px;
       }
-      
-      #suspend {
-        padding: 0 15px;
-      }
 
       #clock:hover,
       #battery:hover,
+      #bluetooth:hover,
       #cpu:hover,
       #memory:hover,
       #disk:hover,

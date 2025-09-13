@@ -17,7 +17,16 @@
       allowUnfree = true;
     };
   };
-  
+
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "1password-gui"
+    "1password"
+  ];
+
+  nixpkgs.buildPlatform = {
+    system = "x86_64-linux";
+  };
+
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -25,7 +34,7 @@
 
   services.displayManager.ly.enable = true;
 
-  networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "d";
   networking.networkmanager.enable = true;
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -72,6 +81,21 @@
 
   hardware.graphics = {
     enable = true;
+  };
+
+  hardware.bluetooth = {
+    enable = true;
+    settings = {
+      General = {
+        Name = "Hello";
+        ControllerMode = "dual";
+        FastConnectable = "true";
+        Experimental = "true";
+      };
+      Policy = {
+        AutoEnable = "true";
+      };
+    };
   };
 
   # Enable sound with pipewire.
@@ -134,7 +158,6 @@
 
   programs.vim.defaultEditor = true;
   environment.systemPackages = with pkgs; [
-    networkmanagerapplet
     vim_configurable
     git
     tmux
@@ -172,9 +195,22 @@
     hyprpaper
     hyprshot
     qimgv
+    libreoffice
+    mariadb
+    dbeaver-bin
+    rofi-bluetooth
     catppuccin-cursors.mochaMauve
+    docker-buildx
     inputs.iwmenu.packages.${pkgs.system}.default
   ];
+
+  programs._1password.enable = true;
+  programs._1password-gui = {
+    enable = true;
+    # Certain features, including CLI integration and system authentication support,
+    # require enabling PolKit integration on some desktop environments (e.g. Plasma).
+    polkitPolicyOwners = [ "d" ];
+  };
 
   fonts.packages = with pkgs; [
     fira-code
@@ -210,8 +246,6 @@
   xdg.portal.enable = true;
   xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-gtk ];
-
-  # Allow unfree packages
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
