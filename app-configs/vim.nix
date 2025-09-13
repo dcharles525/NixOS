@@ -7,7 +7,8 @@
       name = "vim";
       # Install plugins for example for syntax highlighting of nix files
       vimrcConfig.packages.myplugins = with pkgs.vimPlugins; {
-        start = [ nerdtree vim-go vim-nix vim-lastplace vim-airline gruvbox ale
+        start = [ nerdtree vim-go vim-nix vim-lastplace vim-airline gruvbox ale editorconfig-vim
+          vim-indent-guides
           (pkgs.vimUtils.buildVimPlugin {
             name = "vim-ai";
             src = pkgs.fetchFromGitHub {
@@ -15,7 +16,7 @@
               repo = "vim-ai";
               rev = "master";
               #nix-prefetch url https://github.com/madox2/vim-ai/archive/master.tar.gz
-              sha256 = "sha256-YtiZh/nyA/HbhLyTc4iCnP46Sr598IMk3HnTDrWOij4=";
+              sha256 = "sha256-7eCdxY70hcaK40dXnck+M2JNYh0vQSgXoWuFHbdhw3M=";
 
             };
           })
@@ -24,6 +25,7 @@
       };
       vimrcConfig.customRC = ''
         syntax on
+        let g:indent_guides_enable_on_vim_startup = 1
         filetype plugin indent on
         inoremap <Esc> <Esc>:w<CR>
         set backspace=indent,eol,start
