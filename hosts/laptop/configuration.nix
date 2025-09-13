@@ -138,6 +138,11 @@
     nautilus
     iwd
     inputs.iwmenu.packages.${pkgs.system}.default
+
+    hyprpaper
+    hyprshot
+    rofi-bluetooth
+    catppuccin-cursors.mochaMauve
   ];
 
   fonts.packages = with pkgs; [
