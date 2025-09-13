@@ -1,62 +1,48 @@
 { config, pkgs, ... }:
 
 {
-  # Home Manager needs a bit of information about you and the paths it should
-  # manage.
   home.username = "d";
   home.homeDirectory = "/home/d";
-
-  # This value determines the Home Manager release that your configuration is
-  # compatible with. This helps avoid breakage when a new Home Manager release
-  # introduces backwards incompatible changes.
-  #
-  # You should not change this value, even if you update Home Manager. If you do
-  # want to update the value, then make sure to first check the Home Manager
-  # release notes.
-  home.stateVersion = "24.11"; # Please read the comment before changing.
-
-  # The home.packages option allows you to install Nix packages into your
-  # environment.
-  home.packages = [ 
-  ];
-
-  # Home Manager is pretty good at managing dotfiles. The primary way to manage
-  # plain files is through 'home.file'.
-  home.file = {
-    # # Building this configuration will create a copy of 'dotfiles/screenrc' in
-    # # the Nix store. Activating the configuration will then make '~/.screenrc' a
-    # # symlink to the Nix store copy.
-    # ".screenrc".source = dotfiles/screenrc;
-
-    # # You can also set the file content immediately.
-    # ".gradle/gradle.properties".text = ''
-    #   org.gradle.console=verbose
-    #   org.gradle.daemon.idletimeout=3600000
-    # '';
-  };
-
-  # Home Manager can also manage your environment variables through
-  # 'home.sessionVariables'. These will be explicitly sourced when using a
-  # shell provided by Home Manager. If you don't want to manage your shell
-  # through Home Manager then you have to manually source 'hm-session-vars.sh'
-  # located at either
-  #
-  #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  ~/.local/state/nix/profiles/profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  /etc/profiles/per-user/d/etc/profile.d/hm-session-vars.sh
-  #
   home.sessionVariables = {
-    # EDITOR = "emacs";
+    EDITOR = "vim";
+  };
+  programs.home-manager.enable = true;
+
+  home.file.".config/rofi/config.rasi".text = ''
+    @import "${pkgs.rofi-unwrapped}/share/rofi/themes/gruvbox-dark-soft.rasi"
+  '';
+
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      color-scheme = "prefer-dark";
+    };
   };
 
-  # Let Home Manager install and manage itself.
-  programs.home-manager.enable = true;
+  home.pointerCursor = {
+    enable = true;
+    name = "catppuccin-mocha-dark-cursors"; 
+    package = pkgs.catppuccin-cursors.mochaDark;
+    size = 24;
+  };
+  
+  gtk = {
+    enable = true;
+    theme = {
+      name = "Adwaita-dark";
+      package = pkgs.gnome-themes-extra;
+    };
+    cursorTheme = {
+      package = pkgs.catppuccin-cursors.mochaDark;
+      name = "pkgs.catppuccin-cursors.mochaDark";
+    };
+  };
+
+  programs.ghostty.enable = true;
+  programs.ghostty = {
+    settings = {
+      theme = "GruvboxDark";
+    };
+  };
 
   wayland.windowManager.hyprland = {
     enable = true;
@@ -256,7 +242,7 @@
     '';
   };
   
-  programs.hyprlock = {
+   programs.hyprlock = {
     enable = true;
     extraConfig = ''
       # BACKGROUND
@@ -318,6 +304,21 @@
     '';
   };
 
+  services.hyprpaper.enable = true;
+  services.hyprpaper.settings = {
+    ipc = "on";
+    splash = false;
+    splash_offset = 2.0;
+
+    preload = [ "/usr/share/background.jpg" ];
+
+    wallpaper = [
+      "eDP-1,/usr/share/background.jpg"
+      "HDMI-A-1,/usr/share/background.jpg"
+      "DP-1,/usr/share/background.jpg"
+    ];
+  };
+
   services.hypridle.enable = true;
   services.hypridle.settings = {
     general = {
@@ -350,5 +351,291 @@
         on-timeout = "systemctl suspend";
       }
     ];
+  };
+
+  home.file = {
+    ".config/waybar/config.jsonc".text = ''
+      {
+        "layer": "top", // Waybar at top layer
+        "position": "top", // Waybar position (top|bottom|left|right)
+        "height": 42, // Waybar height (to be removed for auto height)
+        // "width": 1280, // Waybar width
+        "spacing": 4, // Gaps between modules (4px)
+        // Choose the order of the modules
+        "modules-left": [
+          "hyprland/workspaces"
+        ],
+        "modules-center": [
+          "hyprland/window"
+        ],
+        "modules-right": [
+          "pulseaudio",
+          "network",
+          "bluetooth",
+          "cpu",
+          "memory",
+          "temperature",
+          "battery",
+          "battery#bat2",
+          "clock",
+          "custom/suspend",
+          "custom/poweroff"
+        ],
+        "include": [
+          "~/.config/waybar/modules.json"
+        ]
+      }
+    '';
+
+    ".config/waybar/modules.json".text = ''
+      {
+        "hyprland/workspaces": {
+          "disable-scroll": true,
+          "all-outputs": true,
+          "warp-on-scroll": false,
+          "format": "{name}",
+          "format-icons": {
+            "urgent": "",
+            "active": "",
+            "default": ""
+          }
+        },
+        "pulseaudio": {
+          "format": "{icon}  {volume}%",
+          "format-bluetooth": "{icon} {volume}%  {format_source}",
+          "format-bluetooth-muted": " {icon} {format_source}",
+          "format-muted": " {format_source}",
+          "format-source": " {volume}%",
+          "format-source-muted": "",
+          "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
+          },
+          "on-click": "pavucontrol"
+        },
+        "network": {
+          "format-wifi": "   {essid} ({signalStrength}%)",
+          "format-ethernet": "{ipaddr}/{cidr} ",
+          "tooltip-format": "{ifname} via {gwaddr} ",
+          "format-linked": "{ifname} (No IP) ",
+          "format-disconnected": "Disconnected ⚠",
+          "on-click": "sh ~/scripts/rofi-wifi-menu/rofi-wifi-menu.sh"
+
+        },
+        "bluetooth": {
+          "format": " {status}",
+          "format-connected": " {device_alias}",
+          "format-connected-battery": " {device_alias} {device_battery_percentage}%",
+          "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
+          "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
+          "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+          "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
+        },
+        "cpu": {
+            "format": "  {usage}%",
+            "tooltip": true
+        },
+        "memory": {
+            "format": "  {}%",
+            "tooltip": true
+        },
+        "temperature": {
+            "interval": 10,
+            "hwmon-path": "/sys/devices/platform/coretemp.0/hwmon/hwmon5/temp1_input",
+            "critical-threshold": 100,
+            "format-critical": " {temperatureF}",
+            "format": " {temperatureF}°F"
+        },
+        "battery": {
+            "states": {
+              "warning": 30,
+              "critical": 15
+            },
+            "format": "{icon}  {capacity}%",
+            "format-full": "{icon}  {capacity}%",
+            "format-charging": "  {capacity}%",
+            "format-plugged": "  {capacity}%",
+            "format-alt": "{time}  {icon}",
+            "format-icons": ["", "", "", "", ""]
+        },
+        "battery#bat2": {
+          "bat": "BAT2"
+        },
+        "clock": {
+          "format": "{:%H:%M | %e %B} ",
+          "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+          "format-alt": "{:%Y-%m-%d}"
+        },
+        "custom/suspend": {
+          "format": "⏾",
+          "tooltip-format": "Over 9000",
+          "on-click": "hyprlock & sleep 1; systemctl suspend"
+        },
+        "custom/poweroff": {
+          "format": "⏻ ",
+          "tooltip-format": "Over 9000",
+          "on-click": "exec systemctl poweroff"
+        }
+      }
+    '';
+
+    ".config/waybar/style.css".text = ''
+      * {
+        font-family: "Fira Sans Semibold", FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+        font-size: 15px;
+        transition: background-color .3s ease-out;
+      }
+
+      window#waybar {
+        background: transparent;
+        color: #FFC519;
+        font-family:
+          SpaceMono Nerd Font,
+          feather;
+        transition: background-color .5s;
+      }
+
+      .modules-left,
+      .modules-center,
+      .modules-right
+      {
+        background: rgba(0, 0, 8, .7);
+        margin: 5px 10px;
+        padding: 0 5px;
+        border-radius: 15px;
+      }
+      .modules-left {
+        padding: 0;
+      }
+      .modules-center {
+        padding: 0 10px;
+      }
+
+      #clock,
+      #battery,
+      #cpu,
+      #memory,
+      #disk,
+      #temperature,
+      #backlight,
+      #network,
+      #bluetooth,
+      #pulseaudio,
+      #wireplumber,
+      #custom-media,
+      #tray,
+      #mode,
+      #idle_inhibitor,
+      #scratchpad,
+      #power-profiles-daemon,
+      #language,
+      #custom-poweroff,
+      #custom-suspend,
+      #mpd {
+        padding: 0 10px;
+        border-radius: 15px;
+      }
+
+      #clock:hover,
+      #battery:hover,
+      #bluetooth:hover,
+      #cpu:hover,
+      #memory:hover,
+      #disk:hover,
+      #temperature:hover,
+      #backlight:hover,
+      #network:hover,
+      #pulseaudio:hover,
+      #wireplumber:hover,
+      #custom-media:hover,
+      #tray:hover,
+      #mode:hover,
+      #idle_inhibitor:hover,
+      #scratchpad:hover,
+      #power-profiles-daemon:hover,
+      #language:hover,
+      #mpd:hover {
+        background: rgba(26, 27, 38, 0.9);
+      }
+
+      #workspaces button {
+        background: transparent;
+        font-family:
+          SpaceMono Nerd Font,
+          feather;
+        font-weight: 900;
+        font-size: 13pt;
+        color: #FFC519;
+        border:none;
+        border-radius: 15px;
+      }
+
+      #workspaces button.active {
+        background: #13131d;
+      }
+
+      #workspaces button:hover {
+        background: #11111b;
+        color: #FFC519;
+        box-shadow: none;
+      }
+    '';
+  };
+
+  services.dunst = {
+    enable = true;
+    settings = {
+      global = {
+        browser = "${config.programs.firefox.package}/bin/firefox -new-tab";
+        dmenu = "${pkgs.rofi}/bin/rofi -dmenu";
+        follow = "mouse";
+        font = "Droid Sans 10";
+        format = "<b>%s</b>\\n%b";
+        frame_color = "#555555";
+        frame_width = 2;
+        geometry = "500x5-5+30";
+        horizontal_padding = 8;
+        icon_position = "off";
+        line_height = 0;
+        markup = "full";
+        padding = 8;
+        separator_color = "frame";
+        separator_height = 2;
+        transparency = 10;
+        word_wrap = true;
+        corner_radius = 10;
+      };
+
+      urgency_low = {
+        background = "#1d1f21";
+        foreground = "#4da1af";
+        frame_color = "#4da1af";
+        timeout = 10;
+      };
+
+      urgency_normal = {
+        background = "#1d1f21";
+        foreground = "#70a040";
+        frame_color = "#70a040";
+        timeout = 15;
+      };
+
+      urgency_critical = {
+        background = "#1d1f21";
+        foreground = "#dd5633";
+        frame_color = "#dd5633";
+        timeout = 0;
+      };
+
+      shortcuts = {
+        context = "mod4+grave";
+        close = "mod4+shift+space";
+      };
+    };
   };
 }
