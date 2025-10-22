@@ -35,6 +35,18 @@
       dns = [ "1.1.1.1" ];
   };
 
+  services.fprintd = {
+    enable = true;
+    package = pkgs.fprintd-tod;  # If you're using the "tod" variant
+    tod = {
+      enable = true;
+      driver = pkgs.libfprint-2-tod1-goodix;
+    };
+  };
+
+  hardware.logitech.wireless.enable = true;
+  hardware.logitech.wireless.enableGraphical = true;
+
   #
   # Bootloader
   #
@@ -48,7 +60,7 @@
   users.users.d = {
     isNormalUser = true;
     description = "David Johnson";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" ];
   };
   home-manager = {
     backupFileExtension = "backup";
@@ -61,7 +73,7 @@
   #
   # Networking
   #
-
+  
   networking.hostName = "d";
   networking.networkmanager.enable = true;
   networking.wireless.iwd.enable = true;
@@ -164,9 +176,17 @@
   # App Configuration
   #
 
+  programs.nix-ld.enable = true;
+  programs.adb.enable = true;
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0660", GROUP="adbusers"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0660", GROUP="adbusers"
+    # Add other vendor IDs as needed for your specific devices
+  '';
+
   nixpkgs.overlays = [
     (final: prev: {
-      postman = prev.postman.overrideAttrs(old: rec {
+      postman = prev.postman.overrideAttrs (old: rec {
         version = "20231205182607";
         src = final.fetchurl {
           url = "https://web.archive.org/web/${version}/https://dl.pstmn.io/download/latest/linux_64";
@@ -175,15 +195,31 @@
         };
       });
     })
+
+    (final: prev: {
+      go_1_20 = (import (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/3f316d2a50699a78afe5e77ca486ad553169061e.tar.gz";
+        sha256 = "sha256:1gfnjl8zjai1cjqhx96jjnnq7zjdn0ajd14xmb09jrgnjs0dw1im";
+      }) {
+        inherit (final) config system;
+      }).go_1_20;
+    })
   ];
-  
+
+  nixpkgs.config.permittedInsecurePackages = [
+    "openssl-1.1.1w"
+  ];
+
   environment.systemPackages = with pkgs; [
     # Developer Tools
     vim_configurable
+    go
+    protobuf
+    openssl
     git
+    nmap
     tmux
     k9s
-    go    
     yarn
     nodejs
     tailscale
@@ -200,6 +236,16 @@
     mariadb
     dbeaver-bin
     docker-buildx
+    android-studio
+    jdk21
+    gnupg
+    pinentry-curses 
+    (python311.withPackages (ps: with ps; [
+      pip
+      requests
+      numpy
+      flask
+    ]))
 
     # Computer Environment
     waybar
@@ -221,15 +267,23 @@
     nautilus
     iwd
     slack
-    
-    # Misc Apps    
+
+    # Misc Apps
+    runescape
     gparted
     rpi-imager
     partclone
+    yaak
     postman
     qimgv
     libreoffice
   ];
+
+   programs.gnupg.agent.pinentryPackage = {
+    enable = true;
+    enableSSHSupport = true;
+    pinentryFlavor = "gnome3";
+  };
 
   programs._1password.enable = true;
   programs._1password-gui = {

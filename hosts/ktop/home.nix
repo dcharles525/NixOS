@@ -4,13 +4,14 @@
   #
   # Base Home Manager Configuration
   #
-  
+
   home.username = "d";
   home.homeDirectory = "/home/d";
   programs.home-manager.enable = true;
   home.sessionVariables = {
     EDITOR = "vim";
   };
+  home.stateVersion = "24.11";
 
   home.file.".config/rofi/config.rasi".text = ''
     @import "${pkgs.rofi-unwrapped}/share/rofi/themes/gruvbox-dark-soft.rasi"
@@ -24,11 +25,11 @@
 
   home.pointerCursor = {
     enable = true;
-    name = "catppuccin-mocha-dark-cursors"; 
+    name = "catppuccin-mocha-dark-cursors";
     package = pkgs.catppuccin-cursors.mochaDark;
     size = 24;
   };
-  
+
   gtk = {
     enable = true;
     theme = {
@@ -42,7 +43,7 @@
   };
 
   #
-  # Theming 
+  # Theming
   #
 
   programs.ghostty.enable = true;
@@ -139,7 +140,7 @@
       }
 
       dwindle {
-        pseudotile = true 
+        pseudotile = true
         preserve_split = true # You probably want this
       }
 
@@ -148,8 +149,8 @@
       }
 
       misc {
-        force_default_wallpaper = -1 
-        disable_hyprland_logo = true 
+        force_default_wallpaper = -1
+        disable_hyprland_logo = true
       }
 
       input {
@@ -257,16 +258,16 @@
       windowrulev2 = nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0
     '';
   };
-  
+
   programs.hyprlock = {
     enable = true;
     extraConfig = ''
       # BACKGROUND
       background {
-        monitor = 
+        monitor =
         blur_passes = 2
       }
-      
+
       # GENERAL
       general {
           hide_cursor = false
@@ -308,7 +309,7 @@
 
       # TIME
       label {
-        monitor = 
+        monitor =
         text = cmd[update:1000] echo "$(date +"%-I:%M")"
         color = rgba(242, 243, 244, 0.75)
         font_size = 95
@@ -339,8 +340,8 @@
   services.hypridle.settings = {
     general = {
       lock_cmd = "hyprlock";
-      before_sleep_cmd = "loginctl lock-session";
-      after_sleep_cmd = "hyprctl dispatch dpms on";
+      before_sleep_cmd = "hyprlock";
+      after_sleep_cmd = "sleep 0.5 && hyprctl dispatch dpms on";
     };
     listener = [
       {
@@ -348,7 +349,7 @@
         on-timeout = "brightnessctl -s set 10";
         on-resume = "brightnessctl -r";
       }
-      { 
+      {
         timeout = 150;
         on-timeout = "brightnessctl -sd rgb:kbd_backlight set 0";
         on-resume = "brightnessctl -rd rgb:kbd_backlight";
@@ -462,7 +463,8 @@
         },
         "temperature": {
             "interval": 10,
-            "hwmon-path": "/sys/devices/platform/coretemp.0/hwmon/hwmon5/temp1_input",
+            "hwmon-path-abs": "/sys/devices/platform/coretemp.0/hwmon",
+            "input-filename": "temp1_input",
             "critical-threshold": 100,
             "format-critical": " {temperatureF}",
             "format": " {temperatureF}°F"
