@@ -7,7 +7,7 @@
 
   imports = [
     ./hardware-configuration.nix
-    ./app-configs/vim.nix
+    ./../../app-configs/vim.nix
     inputs.home-manager.nixosModules.default
   ];
   nixpkgs = {
