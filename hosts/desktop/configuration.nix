@@ -212,6 +212,7 @@
     socat
     kubernetes-helm
     jq
+    yq
     wget
     zip
     unzip
@@ -256,6 +257,7 @@
     yaak
     qimgv
     libreoffice
+    chromium
   ];
 
   services.tailscale.enable = true;
