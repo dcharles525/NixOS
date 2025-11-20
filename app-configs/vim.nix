@@ -8,7 +8,7 @@
       # Install plugins for example for syntax highlighting of nix files
       vimrcConfig.packages.myplugins = with pkgs.vimPlugins; {
         start = [ nerdtree vim-go vim-nix vim-lastplace vim-airline gruvbox ale editorconfig-vim
-          vim-indent-guides
+          vim-indent-guides copilot-vim
           (pkgs.vimUtils.buildVimPlugin {
             name = "vim-ai";
             src = pkgs.fetchFromGitHub {
@@ -16,7 +16,7 @@
               repo = "vim-ai";
               rev = "master";
               #nix-prefetch url https://github.com/madox2/vim-ai/archive/master.tar.gz
-              sha256 = "sha256-gpVMxOqfQMMMb9dAfEaf0edHlEvy8lmetNL2oWolQ4c=";
+              sha256 = "sha256-7eCdxY70hcaK40dXnck+M2JNYh0vQSgXoWuFHbdhw3M=";
 
             };
           })
@@ -39,6 +39,7 @@
         set background=dark
         set noundofile
         set swapfile
+        set clipboard+=unnamedplus
         set dir=~/.vim/tmp//
 
         let g:ale_linters = {

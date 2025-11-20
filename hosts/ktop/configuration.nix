@@ -7,7 +7,7 @@
 
   imports = [
     ./hardware-configuration.nix
-    ./app-configs/vim.nix
+    ./../../app-configs/vim.nix
     inputs.home-manager.nixosModules.default
   ];
   nixpkgs = {
@@ -120,7 +120,7 @@
   #
   # Display and DE Enablement
   #
-
+  services.upower.enable = true;
   services.displayManager.ly.enable = true;
   services.xserver.enable = true;
   services.xserver.xkb = {
@@ -197,23 +197,21 @@
     })
 
     (final: prev: {
-      go_1_20 = (import (builtins.fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/3f316d2a50699a78afe5e77ca486ad553169061e.tar.gz";
-        sha256 = "sha256:1gfnjl8zjai1cjqhx96jjnnq7zjdn0ajd14xmb09jrgnjs0dw1im";
+      go_1_22 = (import (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/24.05.tar.gz";
+        # Use base32 from:
+        #   nix-prefetch-url --unpack https://github.com/NixOS/nixpkgs/archive/refs/tags/24.05.tar.gz
+        sha256 = "1lr1h35prqkd1mkmzriwlpvxcb34kmhc9dnr48gkm8hh089hifmx";
       }) {
         inherit (final) config system;
-      }).go_1_20;
+      }).go_1_22;
     })
-  ];
-
-  nixpkgs.config.permittedInsecurePackages = [
-    "openssl-1.1.1w"
   ];
 
   environment.systemPackages = with pkgs; [
     # Developer Tools
     vim_configurable
-    go
+    go_1_22
     protobuf
     openssl
     git
@@ -230,8 +228,10 @@
     socat
     kubernetes-helm
     jq
+    yq
     wget
     zip
+    gcc
     unzip
     mariadb
     dbeaver-bin
@@ -269,7 +269,6 @@
     slack
 
     # Misc Apps
-    runescape
     gparted
     rpi-imager
     partclone

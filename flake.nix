@@ -28,6 +28,13 @@
           inputs.home-manager.nixosModules.default
         ];
       };
+      ktop = nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs;};
+        modules = [
+          ./hosts/ktop/configuration.nix
+          inputs.home-manager.nixosModules.default
+        ];
+      };
     };
   };
 }
