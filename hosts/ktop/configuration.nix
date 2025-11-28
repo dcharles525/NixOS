@@ -55,6 +55,8 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelParams = [ "systemd.unified_cgroup_hierarchy=1" ];
 
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
   # User Setup
 
   users.users.d = {
@@ -215,6 +217,7 @@
     protobuf
     openssl
     git
+    pack
     nmap
     tmux
     k9s
@@ -230,7 +233,14 @@
     jq
     yq
     wget
+    duf
     zip
+    gzip
+    pigz
+    udev
+    e2fsprogs
+    partimage
+    parted
     gcc
     unzip
     mariadb
