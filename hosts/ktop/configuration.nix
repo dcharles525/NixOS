@@ -27,17 +27,50 @@
     NIXOS_OZONE_WL = "1";
     ADW_DISABLE_PORTAL = "1";
   };
+  environment.shellAliases = {
+    docker = "sudo systemctl start docker 2>/dev/null; command docker";
+    docker-compose = "sudo systemctl start docker 2>/dev/null; command docker-compose";
+  };
   programs.vim.defaultEditor = true;
   system.stateVersion = "24.11";
+
+  # Boot optimization
+  systemd.services.systemd-udev-settle.enable = false;
+  services.power-profiles-daemon.enable = true;
+  systemd.network.wait-online.enable = false;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  # Docker optimization - manual start to avoid blocking boot
+  # Docker is disabled at boot for fast startup. Start it manually when needed:
+  #   sudo systemctl start docker
+  #
+  # Docker maintenance commands:
+  #   Check disk usage:        docker system df
+  #   Clean unused data:       docker system prune -a --volumes
+  #   Remove all volumes:      docker volume rm $(docker volume ls -q)
+  #   Clean build cache:       docker builder prune -a
+  #
   virtualisation.docker.enable = true;
   virtualisation.docker.daemon.settings = {
-      dns = [ "1.1.1.1" ];
+      # Use both local and Cloudflare DNS
+      dns = [ "1.1.1.1" "8.8.8.8" ];
+      # Performance optimizations
+      log-driver = "json-file";
+      log-opts = {
+        max-size = "10m";
+        max-file = "3";
+      };
+      storage-driver = "overlay2";
   };
+  # Disabled auto-prune for safety - run manually when needed
+  virtualisation.docker.autoPrune.enable = false;
+  # Disable socket activation and on-boot start for faster boot times
+  systemd.sockets.docker.wantedBy = lib.mkForce [];
+  systemd.services.docker.wantedBy = lib.mkForce [];
 
   services.fprintd = {
     enable = true;
-    package = pkgs.fprintd-tod;  # If you're using the "tod" variant
+    package = pkgs.fprintd-tod;
     tod = {
       enable = true;
       driver = pkgs.libfprint-2-tod1-goodix;
@@ -54,7 +87,6 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelParams = [ "systemd.unified_cgroup_hierarchy=1" ];
-
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # User Setup
@@ -73,17 +105,19 @@
   };
 
   #
-  # Networking
+  # Networking - ROLLBACK: Keep it simple
   #
-  
+
   networking.hostName = "d";
   networking.networkmanager.enable = true;
+  # Keeping iwd enabled as it was working before
   networking.wireless.iwd.enable = true;
 
-  # Enable CUPS to print documents.
+  # CRITICAL FIX: Don't wait for network at boot
+  systemd.services.NetworkManager-wait-online.enable = false;
+
   services.printing.enable = true;
 
-  # Enable and configure bluetooth
   hardware.bluetooth = {
     enable = true;
     settings = {
@@ -120,26 +154,32 @@
   };
 
   #
-  # Display and DE Enablement
+  # Display and DE Enablement - FIXED: Removed X11 conflict
   #
   services.upower.enable = true;
+  # Optimize upower to not slow boot
+  services.upower.noPollBatteries = false;
+
   services.displayManager.ly.enable = true;
-  services.xserver.enable = true;
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
-  };
+
+  # REMOVED X11: Not needed for pure Wayland setup
+  # services.xserver.enable = true;
+  # services.xserver.xkb = {
+  #   layout = "us";
+  #   variant = "";
+  # };
+
   hardware.graphics = {
     enable = true;
   };
   security.pam.services.hyprlock = {};
+
   fonts.packages = with pkgs; [
     fira-code
     fira-code-symbols
     font-awesome
     liberation_ttf
     mplus-outline-fonts.githubRelease
-    #nerdfonts
     noto-fonts
     noto-fonts-emoji
     proggyfonts
@@ -150,28 +190,46 @@
     xwayland.enable = true;
   };
 
-  programs.waybar = {
+  # FIXED: Proper XDG Portal configuration for Hyprland
+  xdg.portal = {
     enable = true;
-    package = pkgs.waybar.overrideAttrs (oldAttrs: {
-      mesonFlags = oldAttrs.mesonFlags ++ [ "-Dexperimental=true" ];
-    });
+    extraPortals = [
+      pkgs.xdg-desktop-portal-hyprland
+      pkgs.xdg-desktop-portal-gtk
+    ];
+    config = {
+      common = {
+        default = [ "hyprland" "gtk" ];
+      };
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+      };
+    };
   };
 
-  xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-  xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-gtk ];
-
   #
-  # Enable sound with pipewire.
+  # Enable sound with pipewire - ADDED: Realtime priority fix
   #
 
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
+  security.pam.loginLimits = [
+    { domain = "@users"; item = "rtprio"; type = "-"; value = 1; }
+  ];
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+    # Add low-latency settings
+    extraConfig.pipewire."92-low-latency" = {
+      context.properties = {
+        default.clock.rate = 48000;
+        default.clock.quantum = 1024;
+        default.clock.min-quantum = 512;
+        default.clock.max-quantum = 2048;
+      };
+    };
   };
 
   #
@@ -183,7 +241,6 @@
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0660", GROUP="adbusers"
     SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0660", GROUP="adbusers"
-    # Add other vendor IDs as needed for your specific devices
   '';
 
   nixpkgs.overlays = [
@@ -201,8 +258,6 @@
     (final: prev: {
       go_1_22 = (import (builtins.fetchTarball {
         url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/24.05.tar.gz";
-        # Use base32 from:
-        #   nix-prefetch-url --unpack https://github.com/NixOS/nixpkgs/archive/refs/tags/24.05.tar.gz
         sha256 = "1lr1h35prqkd1mkmzriwlpvxcb34kmhc9dnr48gkm8hh089hifmx";
       }) {
         inherit (final) config system;
@@ -214,6 +269,7 @@
     # Developer Tools
     vim_configurable
     go_1_22
+    golangci-lint
     protobuf
     openssl
     git
@@ -249,12 +305,13 @@
     android-studio
     jdk21
     gnupg
-    pinentry-curses 
+    pinentry-curses
     (python311.withPackages (ps: with ps; [
       pip
       requests
       numpy
       flask
+      flake8
     ]))
 
     # Computer Environment
@@ -288,21 +345,36 @@
     libreoffice
   ];
 
-   programs.gnupg.agent.pinentryPackage = {
+  programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
-    pinentryFlavor = "gnome3";
+    pinentryPackage = pkgs.pinentry-gnome3;
   };
 
   programs._1password.enable = true;
   programs._1password-gui = {
     enable = true;
-    # Certain features, including CLI integration and system authentication support,
-    # require enabling PolKit integration on some desktop environments (e.g. Plasma).
     polkitPolicyOwners = [ "d" ];
   };
 
   services.tailscale.enable = true;
   programs.vim.enable = true;
   programs.firefox.enable = true;
+
+  # Optional: Timer to start Docker 30 seconds after login
+  systemd.user.services.docker-lazy-start = {
+    description = "Start Docker daemon after login";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.systemd}/bin/systemctl start docker.service";
+    };
+  };
+  systemd.user.timers.docker-lazy-start = {
+    description = "Timer to start Docker after login";
+    wantedBy = [ "default.target" ];
+    timerConfig = {
+      OnStartupSec = "30s";
+      Unit = "docker-lazy-start.service";
+    };
+  };
 }

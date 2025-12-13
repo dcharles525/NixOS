@@ -1,10 +1,6 @@
 { config, pkgs, ... }:
 
 {
-  #
-  # Base Home Manager Configuration
-  #
-
   home.username = "d";
   home.homeDirectory = "/home/d";
   programs.home-manager.enable = true;
@@ -23,11 +19,14 @@
     };
   };
 
+  # FIXED: Correct cursor theme configuration
   home.pointerCursor = {
     enable = true;
     name = "catppuccin-mocha-dark-cursors";
     package = pkgs.catppuccin-cursors.mochaDark;
     size = 24;
+    gtk.enable = true;
+    x11.enable = true;
   };
 
   gtk = {
@@ -38,19 +37,13 @@
     };
     cursorTheme = {
       package = pkgs.catppuccin-cursors.mochaDark;
-      name = "pkgs.catppuccin-cursors.mochaDark";
+      name = "catppuccin-mocha-dark-cursors";  # FIXED: Was literal "pkgs..." string
     };
   };
 
-  #
-  # Theming
-  #
-
   programs.ghostty.enable = true;
-  programs.ghostty = {
-    settings = {
-      theme = "GruvboxDark";
-    };
+  programs.ghostty.settings = {
+    theme = "GruvboxDark";
   };
 
   wayland.windowManager.hyprland = {
@@ -63,36 +56,32 @@
       $terminal = ghostty
       $fileManager = dolphin
       $menu = wofi --show drun
+      $mainMod = SUPER
+      $shiftMod = SHIFT  # ADDED: Missing variable definition
 
-      exec-once=waybar
+      exec-once=waybar &
+      exec-once=sleep 5 && hyprpaper &
 
       cursor {
         enable_hyprcursor = false
       }
 
-      env = XCURSOR_THEME,Whiteglass
+      env = XCURSOR_THEME,catppuccin-mocha-dark-cursors
       env = XCURSOR_SIZE,24
-      #env = HYPRCURSOR_SIZE,24
 
       general {
         gaps_in = 5
         gaps_out = 20
-
         border_size = 2
-
         col.active_border = rgba(FFD865ee)
         col.inactive_border = rgba(595959aa)
-
         resize_on_border = false
-
         allow_tearing = false
-
         layout = dwindle
       }
 
       decoration {
         rounding = 10
-
         active_opacity = 1.0
         inactive_opacity = 1.0
 
@@ -107,7 +96,6 @@
           enabled = true
           size = 3
           passes = 1
-
           vibrancy = 0.1696
         }
       }
@@ -141,7 +129,7 @@
 
       dwindle {
         pseudotile = true
-        preserve_split = true # You probably want this
+        preserve_split = true
       }
 
       master {
@@ -155,14 +143,8 @@
 
       input {
         kb_layout = us
-        kb_variant =
-        kb_model =
-        kb_options =
-        kb_rules =
-
         follow_mouse = 1
-
-        sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
+        sensitivity = 0
 
         touchpad {
           natural_scroll = true
@@ -178,31 +160,30 @@
         sensitivity = -0.5
       }
 
-      $mainMod = SUPER # Sets "Windows" key as main modifier
-
-      # Screenshot a window
+      # Screenshot bindings
       bind = $mainMod, PRINT, exec, hyprshot -m window
-      # Screenshot a monitor
       bind = , PRINT, exec, hyprshot -m output
-      # Screenshot a region
-      bind = $shiftMod, PRINT, exec, hyprshot -m region
+      bind = $mainMod $shiftMod, PRINT, exec, hyprshot -m region
 
+      # Basic bindings
       bind = $mainMod, Q, exec, $terminal
       bind = $mainMod, C, killactive,
       bind = $mainMod, M, exit,
       bind = $mainMod, E, exec, $fileManager
       bind = $mainMod, V, togglefloating,
       bind = $mainMod, R, exec, $menu
-      bind = $mainMod, P, pseudo, # dwindle
-      bind = $mainMod, J, togglesplit, # dwindle
+      bind = $mainMod, P, pseudo,
+      bind = $mainMod, J, togglesplit,
       bind = $mainMod, L, exec, hyprlock
       bind = $mainMod, N, exec, iwmenu -l rofi
 
+      # Focus movement
       bind = $mainMod, left, movefocus, l
       bind = $mainMod, right, movefocus, r
       bind = $mainMod, up, movefocus, u
       bind = $mainMod, down, movefocus, d
 
+      # Workspace switching
       bind = $mainMod, 1, workspace, 1
       bind = $mainMod, 2, workspace, 2
       bind = $mainMod, 3, workspace, 3
@@ -214,33 +195,39 @@
       bind = $mainMod, 9, workspace, 9
       bind = $mainMod, 0, workspace, 10
 
-      bind = $mainMod SHIFT, 1, movetoworkspace, 1
-      bind = $mainMod SHIFT, 2, movetoworkspace, 2
-      bind = $mainMod SHIFT, 3, movetoworkspace, 3
-      bind = $mainMod SHIFT, 4, movetoworkspace, 4
-      bind = $mainMod SHIFT, 5, movetoworkspace, 5
-      bind = $mainMod SHIFT, 6, movetoworkspace, 6
-      bind = $mainMod SHIFT, 7, movetoworkspace, 7
-      bind = $mainMod SHIFT, 8, movetoworkspace, 8
-      bind = $mainMod SHIFT, 9, movetoworkspace, 9
-      bind = $mainMod SHIFT, 0, movetoworkspace, 10
+      # Move to workspace
+      bind = $mainMod $shiftMod, 1, movetoworkspace, 1
+      bind = $mainMod $shiftMod, 2, movetoworkspace, 2
+      bind = $mainMod $shiftMod, 3, movetoworkspace, 3
+      bind = $mainMod $shiftMod, 4, movetoworkspace, 4
+      bind = $mainMod $shiftMod, 5, movetoworkspace, 5
+      bind = $mainMod $shiftMod, 6, movetoworkspace, 6
+      bind = $mainMod $shiftMod, 7, movetoworkspace, 7
+      bind = $mainMod $shiftMod, 8, movetoworkspace, 8
+      bind = $mainMod $shiftMod, 9, movetoworkspace, 9
+      bind = $mainMod $shiftMod, 0, movetoworkspace, 10
 
-      bind = $mainMod SHIFT, L, moveactive, 30 0
-      bind = $mainMod SHIFT, H, moveactive, -30 0
-      bind = $mainMod SHIFT, K, moveactive, 0 -30
-      bind = $mainMod SHIFT, J, moveactive, 0 30
+      # Move active window
+      bind = $mainMod $shiftMod, L, moveactive, 30 0
+      bind = $mainMod $shiftMod, H, moveactive, -30 0
+      bind = $mainMod $shiftMod, K, moveactive, 0 -30
+      bind = $mainMod $shiftMod, J, moveactive, 0 30
 
-      bind = $mainMod, S, togglespecialworkspace, magic
-      bind = $mainMod SHIFT, S, movetoworkspace, special:magic
+      bind = $mainMod, Z, togglespecialworkspace, magic
+      bind = $mainMod $shiftMod, Z, movetoworkspace, special:magic
 
+      # Mouse workspace switching
       bind = $mainMod, mouse_down, workspace, e+1
       bind = $mainMod, mouse_up, workspace, e-1
 
+      # Rofi launcher
       bind = $mainMod, S, exec, rofi -show drun -show-icons
 
+      # Mouse window controls
       bindm = $mainMod, mouse:272, movewindow
       bindm = $mainMod, mouse:273, resizewindow
 
+      # Media keys
       bindel = ,XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
       bindel = ,XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
       bindel = ,XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
@@ -254,7 +241,6 @@
       bindl = , XF86AudioPrev, exec, playerctl previous
 
       windowrulev2 = suppressevent maximize, class:.*
-
       windowrulev2 = nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0
     '';
   };
@@ -262,40 +248,36 @@
   programs.hyprlock = {
     enable = true;
     extraConfig = ''
-      # BACKGROUND
       background {
         monitor =
         blur_passes = 2
       }
 
-      # GENERAL
       general {
-          hide_cursor = false
-          grace = 0
+        hide_cursor = false
+        grace = 0
       }
 
-      # INPUT FIELD
       input-field {
-          monitor =
-          size = 250, 60
-          outline_thickness = 2
-          dots_size = 0.2 # Scale of input-field height, 0.2 - 0.8
-          dots_spacing = 0.35 # Scale of dots' absolute size, 0.0 - 1.0
-          dots_center = true
-          outer_color = rgba(0, 0, 0, 0)
-          inner_color = rgba(0, 0, 0, 0.2)
-          font_color = rgba(255,255,255,1)
-          fade_on_empty = false
-          rounding = -1
-          check_color = rgb(204, 136, 34)
-          placeholder_text = <i><span foreground="##cdd6f4">Input Password...</span></i>
-          hide_input = false
-          position = 0, -200
-          halign = center
-          valign = center
+        monitor =
+        size = 250, 60
+        outline_thickness = 2
+        dots_size = 0.2
+        dots_spacing = 0.35
+        dots_center = true
+        outer_color = rgba(0, 0, 0, 0)
+        inner_color = rgba(0, 0, 0, 0.2)
+        font_color = rgba(255,255,255,1)
+        fade_on_empty = false
+        rounding = -1
+        check_color = rgb(204, 136, 34)
+        placeholder_text = <i><span foreground="##cdd6f4">Input Password...</span></i>
+        hide_input = false
+        position = 0, -200
+        halign = center
+        valign = center
       }
 
-      # DATE
       label {
         monitor =
         text = cmd[update:1000] echo "$(date +"%A, %B %d")"
@@ -307,7 +289,6 @@
         valign = center
       }
 
-      # TIME
       label {
         monitor =
         text = cmd[update:1000] echo "$(date +"%-I:%M")"
@@ -326,13 +307,11 @@
     ipc = "on";
     splash = false;
     splash_offset = 2.0;
-
-    preload = [ "/usr/share/background.jpg" ];
-
+    preload = [ "~/Pictures/background.jpg" ];
     wallpaper = [
-      "eDP-1,/usr/share/background.jpg"
-      "HDMI-A-1,/usr/share/background.jpg"
-      "DP-1,/usr/share/background.jpg"
+      "eDP-1,~/Pictures/background.jpg"
+      "HDMI-A-1,~/Pictures/background.jpg"
+      "DP-1,~/Pictures/background.jpg"
     ];
   };
 
@@ -373,18 +352,12 @@
   home.file = {
     ".config/waybar/config.jsonc".text = ''
       {
-        "layer": "top", // Waybar at top layer
-        "position": "top", // Waybar position (top|bottom|left|right)
-        "height": 42, // Waybar height (to be removed for auto height)
-        // "width": 1280, // Waybar width
-        "spacing": 4, // Gaps between modules (4px)
-        // Choose the order of the modules
-        "modules-left": [
-          "hyprland/workspaces"
-        ],
-        "modules-center": [
-          "hyprland/window"
-        ],
+        "layer": "top",
+        "position": "top",
+        "height": 42,
+        "spacing": 4,
+        "modules-left": ["hyprland/workspaces"],
+        "modules-center": ["hyprland/window"],
         "modules-right": [
           "pulseaudio",
           "network",
@@ -394,13 +367,12 @@
           "temperature",
           "battery",
           "battery#bat2",
+          "custom/power-profile",
           "clock",
           "custom/suspend",
           "custom/poweroff"
         ],
-        "include": [
-          "~/.config/waybar/modules.json"
-        ]
+        "include": ["~/.config/waybar/modules.json"]
       }
     '';
 
@@ -410,12 +382,7 @@
           "disable-scroll": true,
           "all-outputs": true,
           "warp-on-scroll": false,
-          "format": "{name}",
-          "format-icons": {
-            "urgent": "",
-            "active": "",
-            "default": ""
-          }
+          "format": "{name}"
         },
         "pulseaudio": {
           "format": "{icon}  {volume}%",
@@ -442,7 +409,6 @@
           "format-linked": "{ifname} (No IP) ",
           "format-disconnected": "Disconnected ⚠",
           "on-click": "sh ~/scripts/rofi-wifi-menu/rofi-wifi-menu.sh"
-
         },
         "bluetooth": {
           "format": " {status}",
@@ -462,30 +428,30 @@
             "tooltip": true
         },
         "temperature": {
-            "interval": 10,
-            "hwmon-path-abs": "/sys/devices/platform/coretemp.0/hwmon",
-            "input-filename": "temp1_input",
-            "critical-threshold": 100,
-            "format-critical": " {temperatureF}",
-            "format": " {temperatureF}°F"
+          "interval": 10,
+          "hwmon-path-abs": "/sys/devices/platform/coretemp.0/hwmon",
+          "input-filename": "temp1_input",
+          "critical-threshold": 100,
+          "format-critical": " {temperatureF}",
+          "format": " {temperatureF}°F"
         },
         "battery": {
-            "states": {
-              "warning": 30,
-              "critical": 15
-            },
-            "format": "{icon}  {capacity}%",
-            "format-full": "{icon}  {capacity}%",
-            "format-charging": "  {capacity}%",
-            "format-plugged": "  {capacity}%",
-            "format-alt": "{time}  {icon}",
-            "format-icons": ["", "", "", "", ""]
+          "states": {
+            "warning": 30,
+            "critical": 15
+          },
+          "format": "{icon}  {capacity}%",
+          "format-full": "{icon}  {capacity}%",
+          "format-charging": "  {capacity}%",
+          "format-plugged": "  {capacity}%",
+          "format-alt": "{time}  {icon}",
+          "format-icons": ["", "", "", "", ""]
         },
         "battery#bat2": {
           "bat": "BAT2"
         },
         "clock": {
-          "format": "{:%H:%M | %e %B} ",
+          "format": "{:%H:%M | %e %B}",
           "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
           "format-alt": "{:%Y-%m-%d}"
         },
@@ -498,6 +464,14 @@
           "format": "⏻ ",
           "tooltip-format": "Over 9000",
           "on-click": "exec systemctl poweroff"
+        },
+        "custom/power-profile": {
+          "exec": "${config.home.homeDirectory}/.config/waybar/scripts/power-profile.sh get",
+          "on-click": "${config.home.homeDirectory}/.config/waybar/scripts/power-profile.sh toggle",
+          "interval": 1,
+          "format": "{}",
+          "tooltip": true,
+          "tooltip-format": "Power Profile: {}",
         }
       }
     '';
@@ -512,24 +486,23 @@
       window#waybar {
         background: transparent;
         color: #FFC519;
-        font-family:
-          SpaceMono Nerd Font,
-          feather;
+        font-family: SpaceMono Nerd Font, feather;
         transition: background-color .5s;
       }
 
       .modules-left,
       .modules-center,
-      .modules-right
-      {
+      .modules-right {
         background: rgba(0, 0, 8, .7);
         margin: 5px 10px;
         padding: 0 5px;
         border-radius: 15px;
       }
+
       .modules-left {
         padding: 0;
       }
+
       .modules-center {
         padding: 0 10px;
       }
@@ -552,6 +525,8 @@
       #scratchpad,
       #power-profiles-daemon,
       #language,
+      #custom-power-profile,
+      #custom-poweroff,
       #custom-poweroff,
       #custom-suspend,
       #mpd {
@@ -575,6 +550,7 @@
       #mode:hover,
       #idle_inhibitor:hover,
       #scratchpad:hover,
+      #custom-power-profile:hover,
       #power-profiles-daemon:hover,
       #language:hover,
       #mpd:hover {
@@ -583,13 +559,11 @@
 
       #workspaces button {
         background: transparent;
-        font-family:
-          SpaceMono Nerd Font,
-          feather;
+        font-family: SpaceMono Nerd Font, feather;
         font-weight: 900;
         font-size: 13pt;
         color: #FFC519;
-        border:none;
+        border: none;
         border-radius: 15px;
       }
 
@@ -603,6 +577,71 @@
         box-shadow: none;
       }
     '';
+  };
+
+  home.file.".config/waybar/scripts/power-profile.sh" = {
+    text = ''
+      #!/usr/bin/env bash
+
+      # Get current power profile
+      get_profile() {
+          powerprofilesctl get
+      }
+
+      # Get icon based on profile
+      get_icon() {
+          case "$(get_profile)" in
+              "power-saver")
+                  echo "󰌪"  # battery icon
+                  ;;
+              "balanced")
+                  echo "󰗑"  # balanced icon
+                  ;;
+              "performance")
+                  echo "󱐋"  # performance icon
+                  ;;
+              *)
+                  echo "󰚥"  # unknown
+                  ;;
+          esac
+      }
+
+      # Toggle to next profile
+      toggle_profile() {
+          current=$(get_profile)
+          case "$current" in
+              "power-saver")
+                  powerprofilesctl set balanced
+                  ;;
+              "balanced")
+                  powerprofilesctl set performance
+                  ;;
+              "performance")
+                  powerprofilesctl set power-saver
+                  ;;
+          esac
+      }
+
+      # Main logic
+      case "$1" in
+          "toggle")
+              toggle_profile
+              ;;
+          "get")
+              profile=$(get_profile)
+              # Capitalize first letter of each word
+              capitalized=$(echo "$profile" | sed 's/-/ /g' | sed 's/\b\(.\)/\u\1/g')
+              echo "$(get_icon) $capitalized"
+              ;;
+          *)
+              profile=$(get_profile)
+              # Capitalize first letter of each word
+              capitalized=$(echo "$profile" | sed 's/-/ /g' | sed 's/\b\(.\)/\u\1/g')
+              echo "$(get_icon) $capitalized"
+              ;;
+      esac
+    '';
+    executable = true;
   };
 
   services.dunst = {
