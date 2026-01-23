@@ -30,7 +30,7 @@
         inoremap <Esc> <Esc>:w<CR>
         set backspace=indent,eol,start
         set tabstop=2 shiftwidth=2 expandtab
-        set autoindent 
+        set autoindent
         set smartindent
         set t_Co=256
         colorscheme gruvbox
@@ -45,6 +45,7 @@
         let g:ale_linters = {
           \'javascript': ['eslint'],
           \'python': ['flake8', 'pylint'],
+          \'typescript': ['eslint'],
         \}
 
         packloadall
@@ -58,7 +59,7 @@
           \    "stream": 0,
           \    "temperature": 1,
           \    "max_completion_tokens": 2048,
-          \    "initial_prompt": "Hello, as my AI assistant I would like you to be like Jarvis from ironman. Whitty, smart, and concise. I am a programmer so most things I ask will be centered around that but I also like philosphy, consumer tech, and food." 
+          \    "initial_prompt": "Hello, as my AI assistant I would like you to be like Jarvis from ironman. Whitty, smart, and concise. I am a programmer so most things I ask will be centered around that but I also like philosphy, consumer tech, and food."
           \  },
         \}
       '';

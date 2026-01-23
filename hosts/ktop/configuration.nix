@@ -49,33 +49,7 @@
   #   Clean unused data:       docker system prune -a --volumes
   #   Remove all volumes:      docker volume rm $(docker volume ls -q)
   #   Clean build cache:       docker builder prune -a
-  #
   virtualisation.docker.enable = true;
-  virtualisation.docker.daemon.settings = {
-      # Use both local and Cloudflare DNS
-      dns = [ "1.1.1.1" "8.8.8.8" ];
-      # Performance optimizations
-      log-driver = "json-file";
-      log-opts = {
-        max-size = "10m";
-        max-file = "3";
-      };
-      storage-driver = "overlay2";
-  };
-  # Disabled auto-prune for safety - run manually when needed
-  virtualisation.docker.autoPrune.enable = false;
-  # Disable socket activation and on-boot start for faster boot times
-  systemd.sockets.docker.wantedBy = lib.mkForce [];
-  systemd.services.docker.wantedBy = lib.mkForce [];
-
-  services.fprintd = {
-    enable = true;
-    package = pkgs.fprintd-tod;
-    tod = {
-      enable = true;
-      driver = pkgs.libfprint-2-tod1-goodix;
-    };
-  };
 
   hardware.logitech.wireless.enable = true;
   hardware.logitech.wireless.enableGraphical = true;
@@ -306,6 +280,8 @@
     jdk21
     gnupg
     pinentry-curses
+    iotop
+    sysstat
     (python311.withPackages (ps: with ps; [
       pip
       requests
@@ -360,21 +336,4 @@
   services.tailscale.enable = true;
   programs.vim.enable = true;
   programs.firefox.enable = true;
-
-  # Optional: Timer to start Docker 30 seconds after login
-  systemd.user.services.docker-lazy-start = {
-    description = "Start Docker daemon after login";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.systemd}/bin/systemctl start docker.service";
-    };
-  };
-  systemd.user.timers.docker-lazy-start = {
-    description = "Timer to start Docker after login";
-    wantedBy = [ "default.target" ];
-    timerConfig = {
-      OnStartupSec = "30s";
-      Unit = "docker-lazy-start.service";
-    };
-  };
 }
