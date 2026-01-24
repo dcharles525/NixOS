@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, services, ... }:
 
 {
   home.username = "d";
@@ -13,13 +13,16 @@
     @import "${pkgs.rofi-unwrapped}/share/rofi/themes/gruvbox-dark-soft.rasi"
   '';
 
+  services.udiskie = {
+    enable = true;
+  };
+
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
     };
   };
 
-  # FIXED: Correct cursor theme configuration
   home.pointerCursor = {
     enable = true;
     name = "catppuccin-mocha-dark-cursors";
@@ -44,6 +47,62 @@
   programs.ghostty.enable = true;
   programs.ghostty.settings = {
     theme = "GruvboxDark";
+  };
+
+  # Add to your home.nix
+  systemd.user.services.hyprland-pre-suspend = {
+    Unit = {
+      Description = "Switch to laptop display before suspend";
+      Before = [ "sleep.target" ];
+    };
+    
+    Service = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "hyprland-pre-suspend" ''
+        # Only run if Hyprland is active
+        if pgrep -x Hyprland > /dev/null; then
+          # Switch to laptop display only
+          ${pkgs.hyprland}/bin/hyprctl keyword monitor "eDP-1,2560x1600@165,0x0,1"
+          ${pkgs.hyprland}/bin/hyprctl keyword monitor "DP-3,disabled"
+          ${pkgs.hyprland}/bin/hyprctl keyword monitor "DP-4,disabled"
+        fi
+      '';
+    };
+    
+    Install = {
+      WantedBy = [ "sleep.target" ];
+    };
+  };
+
+  systemd.user.services.hyprland-post-resume = {
+    Unit = {
+      Description = "Restore monitor configuration after resume";
+      After = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
+    };
+
+    Service = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "hyprland-post-resume" ''
+        # Wait for hardware to stabilize
+        sleep 3
+
+        # Only run if Hyprland is active
+        if pgrep -x Hyprland > /dev/null; then
+          # Re-run your monitor detection logic
+          if hyprctl monitors | grep -q "DP-3"; then
+            hyprctl keyword monitor "DP-3,3840x2160@60,0x0,1.5"
+            hyprctl keyword monitor "DP-4,3840x2160@60,2560x0,1.5"
+            hyprctl keyword monitor "eDP-1,2560x1600@165,5120x500,1"
+          else
+            hyprctl keyword monitor "eDP-1,2560x1600@165,0x0,1"
+          fi
+        fi
+      '';
+    };
+
+    Install = {
+      WantedBy = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
+    };
   };
 
   wayland.windowManager.hyprland = {
@@ -325,12 +384,12 @@
     listener = [
       {
         timeout = 150;
-        on-timeout = "brightnessctl -s set 10";
+        on-timeout = "brightnessctl -s set 50";
         on-resume = "brightnessctl -r";
       }
       {
         timeout = 150;
-        on-timeout = "brightnessctl -sd rgb:kbd_backlight set 0";
+        on-timeout = "brightnessctl -sd rgb:kbd_backlight set 20";
         on-resume = "brightnessctl -rd rgb:kbd_backlight";
       }
       {
@@ -365,6 +424,7 @@
           "cpu",
           "memory",
           "temperature",
+          "custom/disks",
           "battery",
           "battery#bat2",
           "custom/power-profile",
@@ -400,7 +460,7 @@
             "car": "",
             "default": ["", "", ""]
           },
-          "on-click": "pavucontrol"
+          "on-click": "${config.home.homeDirectory}/NixOS/scripts/rofi-sound-picker.sh",
         },
         "network": {
           "format-wifi": "   {essid} ({signalStrength}%)",
@@ -408,7 +468,7 @@
           "tooltip-format": "{ifname} via {gwaddr} ",
           "format-linked": "{ifname} (No IP) ",
           "format-disconnected": "Disconnected ⚠",
-          "on-click": "sh ~/scripts/rofi-wifi-menu/rofi-wifi-menu.sh"
+          "on-click": "${config.home.homeDirectory}/NixOS/scripts/rofi-wifi-menu.sh",
         },
         "bluetooth": {
           "format": " {status}",
@@ -418,6 +478,7 @@
           "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
           "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
           "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
+          "on-click": "${config.home.homeDirectory}/NixOS/scripts/rofi-bluetooth-menu.sh",
         },
         "cpu": {
             "format": "  {usage}%",
@@ -472,6 +533,11 @@
           "format": "{}",
           "tooltip": true,
           "tooltip-format": "Power Profile: {}",
+        },
+        "custom/disks": {
+          "format": "🖴 {}",
+          "interval": 2,
+          "exec": "iostat -dx 1 2 nvme0n1 | grep nvme0n1 | tail -1 | awk '{print $22\"%\"}'"
         }
       }
     '';
@@ -525,6 +591,7 @@
       #scratchpad,
       #power-profiles-daemon,
       #language,
+      #custom-disks,
       #custom-power-profile,
       #custom-poweroff,
       #custom-poweroff,
@@ -575,6 +642,13 @@
         background: #11111b;
         color: #FFC519;
         box-shadow: none;
+      }
+
+      #custom-disk {
+        background-color: #1e1e2e;
+        color: #cdd6f4;
+        padding: 0 10px;
+        margin: 0 5px;
       }
     '';
   };

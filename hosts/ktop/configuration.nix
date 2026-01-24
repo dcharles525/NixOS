@@ -10,6 +10,9 @@
     ./../../app-configs/vim.nix
     inputs.home-manager.nixosModules.default
   ];
+
+  boot.initrd.luks.devices."luks-bc326299-90c0-4725-a27c-7ff11256edc9".device = "/dev/disk/by-uuid/bc326299-90c0-4725-a27c-7ff11256edc9";
+
   nixpkgs = {
     config = {
       allowUnfree = true;
@@ -84,10 +87,8 @@
 
   networking.hostName = "d";
   networking.networkmanager.enable = true;
-  # Keeping iwd enabled as it was working before
   networking.wireless.iwd.enable = true;
 
-  # CRITICAL FIX: Don't wait for network at boot
   systemd.services.NetworkManager-wait-online.enable = false;
 
   services.printing.enable = true;
@@ -128,20 +129,12 @@
   };
 
   #
-  # Display and DE Enablement - FIXED: Removed X11 conflict
+  # Display and DE Enablement
   #
   services.upower.enable = true;
   # Optimize upower to not slow boot
   services.upower.noPollBatteries = false;
-
   services.displayManager.ly.enable = true;
-
-  # REMOVED X11: Not needed for pure Wayland setup
-  # services.xserver.enable = true;
-  # services.xserver.xkb = {
-  #   layout = "us";
-  #   variant = "";
-  # };
 
   hardware.graphics = {
     enable = true;
@@ -164,7 +157,6 @@
     xwayland.enable = true;
   };
 
-  # FIXED: Proper XDG Portal configuration for Hyprland
   xdg.portal = {
     enable = true;
     extraPortals = [
@@ -212,6 +204,7 @@
 
   programs.nix-ld.enable = true;
   programs.adb.enable = true;
+  services.udisks2.enable = true;
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0660", GROUP="adbusers"
     SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0660", GROUP="adbusers"
@@ -300,6 +293,10 @@
     rofi-bluetooth
     catppuccin-cursors.mochaMauve
     inputs.iwmenu.packages.${pkgs.system}.default
+    brightnessctl
+    pulseaudio
+    iw
+    lemonbar
 
     # Media
     circumflex
@@ -312,6 +309,7 @@
     slack
 
     # Misc Apps
+    bc
     gparted
     rpi-imager
     partclone
