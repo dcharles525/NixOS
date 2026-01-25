@@ -8,7 +8,7 @@
       # Install plugins for example for syntax highlighting of nix files
       vimrcConfig.packages.myplugins = with pkgs.vimPlugins; {
         start = [ nerdtree vim-go vim-nix vim-lastplace vim-airline gruvbox ale editorconfig-vim
-          vim-indent-guides
+          vim-indent-guides copilot-vim
           (pkgs.vimUtils.buildVimPlugin {
             name = "vim-ai";
             src = pkgs.fetchFromGitHub {
@@ -16,7 +16,7 @@
               repo = "vim-ai";
               rev = "master";
               #nix-prefetch url https://github.com/madox2/vim-ai/archive/master.tar.gz
-              sha256 = "sha256-gpVMxOqfQMMMb9dAfEaf0edHlEvy8lmetNL2oWolQ4c=";
+              sha256 = "sha256-ciqdph+YnZ8EkCIJp373oX9NiRtqa5EgtzXysF8PxOk=";
 
             };
           })
@@ -30,7 +30,7 @@
         inoremap <Esc> <Esc>:w<CR>
         set backspace=indent,eol,start
         set tabstop=2 shiftwidth=2 expandtab
-        set autoindent 
+        set autoindent
         set smartindent
         set t_Co=256
         colorscheme gruvbox
@@ -39,10 +39,12 @@
         set background=dark
         set noundofile
         set swapfile
+        set clipboard+=unnamedplus
         set dir=~/.vim/tmp//
 
         let g:ale_linters = {
           \'javascript': ['eslint'],
+          \'python': ['flake8', 'pylint'],
         \}
 
         packloadall
@@ -56,10 +58,11 @@
           \    "stream": 0,
           \    "temperature": 1,
           \    "max_completion_tokens": 2048,
-          \    "initial_prompt": "Hello, as my AI assistant I would like you to be like Jarvis from ironman. Whitty, smart, and concise. I am a programmer so most things I ask will be centered around that but I also like philosphy, consumer tech, and food." 
+          \    "initial_prompt": "Hello, as my AI assistant I would like you to be like Jarvis from ironman. Whitty, smart, and concise. I am a programmer so most things I ask will be centered around that but I also like philosphy, consumer tech, and food."
           \  },
         \}
       '';
     }
   )];
 }
+
