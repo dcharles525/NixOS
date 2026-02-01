@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Starts a scan of available broadcasting SSIDs
-# nmcli dev wifi rescan
+sudo nmcli dev wifi rescan
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -16,7 +16,8 @@ if [ -r "$DIR/config" ]; then
 elif [ -r "$HOME/.config/rofi/wifi" ]; then
 	source "$HOME/.config/rofi/wifi"
 else
-	echo "WARNING: config file not found! Using default values."
+	#echo "WARNING: config file not found! Using default values."
+  echo ""
 fi
 
 LIST=$(nmcli --fields "$FIELDS" device wifi list | sed '/^--/d')
@@ -69,16 +70,17 @@ if [ "$CHENTRY" = "manual" ] ; then
 
 	# If the user entered a manual password, then use the password nmcli command
 	if [ "$MPASS" = "" ]; then
-		nmcli dev wifi con "$MSSID"
+		sudo nmcli dev wifi con "$MSSID"
 	else
-		nmcli dev wifi con "$MSSID" password "$MPASS"
+    sudo nmcli connection delete "$MSSID"
+		sudo nmcli dev wifi con "$MSSID" password "$MPASS"
 	fi
 
 elif [ "$CHENTRY" = "toggle on" ]; then
-	nmcli radio wifi on
+	sudo nmcli radio wifi on
 
 elif [ "$CHENTRY" = "toggle off" ]; then
-	nmcli radio wifi off
+	sudo nmcli radio wifi off
 
 else
 
@@ -89,12 +91,13 @@ else
 
 	# Parses the list of preconfigured connections to see if it already contains the chosen SSID. This speeds up the connection process
 	if [[ $(echo "$KNOWNCON" | grep "$CHSSID") = "$CHSSID" ]]; then
-		nmcli con up "$CHSSID"
+		sudo nmcli con up "$CHSSID"
 	else
 		if [[ "$CHENTRY" =~ "WPA2" ]] || [[ "$CHENTRY" =~ "WEP" ]]; then
 			WIFIPASS=$(echo "if connection is stored, hit enter" | rofi -dmenu -p "password: " -lines 1 -font "$FONT" )
 		fi
-		nmcli dev wifi con "$CHSSID" password "$WIFIPASS"
+    sudo nmcli connection delete "$CHSSID"
+		sudo nmcli dev wifi con "$CHSSID" password "$WIFIPASS"
 	fi
 
 fi

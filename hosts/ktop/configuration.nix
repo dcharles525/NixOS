@@ -275,6 +275,7 @@
     pinentry-curses
     iotop
     sysstat
+    openfortivpn
     (python311.withPackages (ps: with ps; [
       pip
       requests
@@ -318,6 +319,8 @@
     qimgv
     libreoffice
   ];
+
+  nixpkgs.config.android_sdk.accept_license = true;
 
   programs.gnupg.agent = {
     enable = true;
