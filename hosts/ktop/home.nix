@@ -116,7 +116,7 @@
       $fileManager = dolphin
       $menu = wofi --show drun
       $mainMod = SUPER
-      $shiftMod = SHIFT  # ADDED: Missing variable definition
+      $shiftMod = SHIFT
 
       exec-once=waybar &
       exec-once=sleep 5 && hyprpaper &
@@ -384,12 +384,12 @@
     listener = [
       {
         timeout = 150;
-        on-timeout = "brightnessctl -s set 50";
+        on-timeout = "brightnessctl -s set 70%";
         on-resume = "brightnessctl -r";
       }
       {
         timeout = 150;
-        on-timeout = "brightnessctl -sd rgb:kbd_backlight set 20";
+        on-timeout = "brightnessctl -sd rgb:kbd_backlight set 50%";
         on-resume = "brightnessctl -rd rgb:kbd_backlight";
       }
       {
