@@ -276,6 +276,7 @@
     iotop
     sysstat
     openfortivpn
+    openfortivpn-webview
     (python311.withPackages (ps: with ps; [
       pip
       requests
