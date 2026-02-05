@@ -17,6 +17,10 @@
     @import "${pkgs.rofi-unwrapped}/share/rofi/themes/gruvbox-dark-soft.rasi"
   '';
 
+  services.udiskie = {
+    enable = true;
+  };
+
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
@@ -57,13 +61,14 @@
     enable = true;
     extraConfig = ''
       monitor = DP-1, 2560x1440@60, 0x0, 1
-      monitor = HDMI-A-1, 1920x1080@144, 2560x0, 1, transform, 3
+      monitor = HDMI-A-1, 2560x1440@60, 2560x0, 1, transform, 3
 
       $terminal = ghostty
       $fileManager = dolphin
       $menu = wofi --show drun
 
-      exec-once=waybar
+      exec-once = waybar
+      exec-once=sleep 5 && hyprpaper &
 
       cursor {
         enable_hyprcursor = false
@@ -326,12 +331,12 @@
     splash = false;
     splash_offset = 2.0;
 
-    preload = [ "/usr/share/background.jpg" ];
+    preload = [ "~/Pictures/background.jpg" ];
 
     wallpaper = [
-      "eDP-1,/usr/share/background.jpg"
-      "HDMI-A-1,/usr/share/background.jpg"
-      "DP-1,/usr/share/background.jpg"
+      "eDP-1,~/Pictures/background.jpg"
+      "HDMI-A-1,~/Pictures/background.jpg"
+      "DP-1,~/Pictures/background.jpg"
     ];
   };
 
@@ -375,9 +380,7 @@
         "layer": "top", // Waybar at top layer
         "position": "top", // Waybar position (top|bottom|left|right)
         "height": 42, // Waybar height (to be removed for auto height)
-        // "width": 1280, // Waybar width
         "spacing": 4, // Gaps between modules (4px)
-        // Choose the order of the modules
         "modules-left": [
           "hyprland/workspaces"
         ],
@@ -390,6 +393,7 @@
           "bluetooth",
           "cpu",
           "memory",
+          "custom/disks",
           "temperature",
           "battery",
           "battery#bat2",
@@ -432,15 +436,15 @@
             "car": "",
             "default": ["", "", ""]
           },
-          "on-click": "pavucontrol"
+          "on-click": "${config.home.homeDirectory}/NixOS/scripts/rofi-sound-picker.sh",
         },
         "network": {
           "format-wifi": "   {essid} ({signalStrength}%)",
-          "format-ethernet": "{ipaddr}/{cidr} ",
+          "format-ethernet": "Ethernet ",
           "tooltip-format": "{ifname} via {gwaddr} ",
           "format-linked": "{ifname} (No IP) ",
           "format-disconnected": "Disconnected ⚠",
-          "on-click": "sh ~/scripts/rofi-wifi-menu/rofi-wifi-menu.sh"
+          "on-click": "${config.home.homeDirectory}/NixOS/scripts/rofi-wifi-menu.sh"
 
         },
         "bluetooth": {
@@ -451,6 +455,7 @@
           "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
           "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
           "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
+          "on-click": "${config.home.homeDirectory}/NixOS/scripts/rofi-bluetooth-menu.sh",
         },
         "cpu": {
             "format": "  {usage}%",
@@ -497,6 +502,11 @@
           "format": "⏻ ",
           "tooltip-format": "Over 9000",
           "on-click": "exec systemctl poweroff"
+        },
+        "custom/disks": {
+          "format": "🖴 {}",
+          "interval": 2,
+          "exec": "iostat -dx 1 2 nvme1n1 | grep nvme1n1 | tail -1 | awk '{print $22\"%\"}'"
         }
       }
     '';
@@ -519,18 +529,19 @@
 
       .modules-left,
       .modules-center,
-      .modules-right
-      {
+      .modules-right {
         background: rgba(0, 0, 8, .7);
-        margin: 5px 10px;
-        padding: 0 5px;
+        margin: 5px 5px;
         border-radius: 15px;
       }
+
       .modules-left {
         padding: 0;
       }
-      .modules-center {
-        padding: 0 10px;
+
+      .modules-center,
+      .modules-right {
+        padding: 5px 10px;
       }
 
       #clock,
@@ -553,6 +564,7 @@
       #language,
       #custom-poweroff,
       #custom-suspend,
+      #custom-disks,
       #mpd {
         padding: 0 10px;
         border-radius: 15px;
@@ -600,6 +612,11 @@
         background: #11111b;
         color: #FFC519;
         box-shadow: none;
+      }
+
+      #custom-disk {
+        background-color: #1e1e2e;
+        color: #cdd6f4;
       }
     '';
   };

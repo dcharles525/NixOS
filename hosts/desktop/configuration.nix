@@ -23,6 +23,7 @@
     NIXOS_OZONE_WL = "1";
     ADW_DISABLE_PORTAL = "1";
   };
+  services.udisks2.enable = true;
   programs.vim.defaultEditor = true;
   system.stateVersion = "24.11";
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -155,7 +156,6 @@
   };
 
   programs.waybar = {
-    enable = true;
     package = pkgs.waybar.overrideAttrs (oldAttrs: {
       mesonFlags = oldAttrs.mesonFlags ++ [ "-Dexperimental=true" ];
     });
@@ -226,6 +226,8 @@
       numpy
       flask
     ]))
+    iotop
+    sysstat
 
     # Computer Environment
     waybar
@@ -247,6 +249,10 @@
     nautilus
     iwd
     slack
+    brightnessctl
+    pulseaudio
+    iw
+    lemonbar
 
     # Misc Apps
     bolt-launcher
@@ -258,6 +264,7 @@
     qimgv
     libreoffice
     chromium
+    gotop
   ];
 
   services.tailscale.enable = true;
