@@ -35,6 +35,7 @@
         set t_Co=256
         colorscheme gruvbox
         set number
+        set cursorline
         set colorcolumn=80
         set background=dark
         set noundofile
