@@ -40,6 +40,7 @@
         set background=dark
         set noundofile
         set swapfile
+        set cursorline
         set clipboard+=unnamedplus
         set dir=~/.vim/tmp//
 
