@@ -312,6 +312,7 @@
 
     # Misc Apps
     bc
+    gotop
     gparted
     rpi-imager
     partclone
