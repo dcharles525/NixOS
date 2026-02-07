@@ -8,6 +8,7 @@
   imports = [
     ./hardware-configuration.nix
     ./../../app-configs/vim.nix
+    ./../../app-configs/tmux.nix
     inputs.home-manager.nixosModules.default
   ];
   nixpkgs = {
