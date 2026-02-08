@@ -78,7 +78,7 @@
     backupFileExtension = "backup";
     extraSpecialArgs = { inherit inputs; };
     users = {
-      "d" = import ./home.nix;
+      "d" = import ./../../home.nix;
     };
   };
 
