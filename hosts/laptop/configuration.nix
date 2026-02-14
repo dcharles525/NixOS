@@ -105,7 +105,7 @@
     backupFileExtension = "backup";
     extraSpecialArgs = { inherit inputs; };
     users = {
-      "d" = import ./home.nix;
+      "d" = import ./../../home.nix;
     };
   };
 
@@ -138,11 +138,25 @@
     nautilus
     iwd
     inputs.iwmenu.packages.${pkgs.system}.default
+    iotop
+    sysstat
 
     hyprpaper
     hyprshot
     rofi-bluetooth
     catppuccin-cursors.mochaMauve
+    
+    # Media
+    circumflex
+    brightnessctl
+    pulseaudio
+    iw
+    lemonbar
+    
+    # Misc Apps
+    bolt-launcher
+    runescape
+    gotop
   ];
 
   fonts.packages = with pkgs; [
