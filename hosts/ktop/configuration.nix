@@ -272,6 +272,8 @@
     android-studio
     jdk21
     gnupg
+    hugo
+    tigervnc
     pinentry-curses
     iotop
     sysstat
