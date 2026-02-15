@@ -24,6 +24,7 @@
           "temperature"
           "battery"
           "battery#bat2"
+          "custom/power-profile"
           "clock"
           "custom/suspend"
           "custom/poweroff"
@@ -120,6 +121,14 @@
           format = "⏻ ";
           tooltip-format = "Darkness";
           on-click = "exec systemctl poweroff";
+        };
+        "custom/power-profile" = {
+          exec = "${config.home.homeDirectory}/.config/waybar/scripts/power-profile.sh get";
+          on-click = "${config.home.homeDirectory}/.config/waybar/scripts/power-profile.sh toggle";
+          interval = 1;
+          format = "{}";
+          tooltip = true;
+          tooltip-format = "Power Profile: {}";
         };
         "custom/disks" = {
           format = "🖴 {}";
@@ -236,5 +245,70 @@
         color: #cdd6f4;
       }
     '';
+  };
+
+  home.file.".config/waybar/scripts/power-profile.sh" = {
+    text = ''
+      #!/usr/bin/env bash
+
+      # Get current power profile
+      get_profile() {
+          powerprofilesctl get
+      }
+
+      # Get icon based on profile
+      get_icon() {
+          case "$(get_profile)" in
+              "power-saver")
+                  echo "󰌪"  # battery icon
+                  ;;
+              "balanced")
+                  echo "󰗑"  # balanced icon
+                  ;;
+              "performance")
+                  echo "󱐋"  # performance icon
+                  ;;
+              *)
+                  echo "󰚥"  # unknown
+                  ;;
+          esac
+      }
+
+      # Toggle to next profile
+      toggle_profile() {
+          current=$(get_profile)
+          case "$current" in
+              "power-saver")
+                  powerprofilesctl set balanced
+                  ;;
+              "balanced")
+                  powerprofilesctl set performance
+                  ;;
+              "performance")
+                  powerprofilesctl set power-saver
+                  ;;
+          esac
+      }
+
+      # Main logic
+      case "$1" in
+          "toggle")
+              toggle_profile
+              ;;
+          "get")
+              profile=$(get_profile)
+              # Capitalize first letter of each word
+              capitalized=$(echo "$profile" | sed 's/-/ /g' | sed 's/\b\(.\)/\u\1/g')
+              echo "$(get_icon) $capitalized"
+              ;;
+          *)
+              profile=$(get_profile)
+              # Capitalize first letter of each word
+              capitalized=$(echo "$profile" | sed 's/-/ /g' | sed 's/\b\(.\)/\u\1/g')
+              echo "$(get_icon) $capitalized"
+              ;;
+      esac
+    '';
+    executable = true;
   };
 }

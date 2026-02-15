@@ -1,10 +1,18 @@
-{ ... }:
+{ specialArgs, ... }:
 {
   wayland.windowManager.hyprland = {
     enable = true;
     extraConfig = ''
-      monitor = DP-1, 2560x1440@60, 0x0, 1
-      monitor = HDMI-A-1, 2560x1440@60, 2560x0, 1, transform, 3
+      ${if specialArgs.host == "desktop" then ''
+        monitor = DP-1, 2560x1440@60, 0x0, 1
+        monitor = HDMI-A-1, 2560x1440@60, 2560x0, 1, transform, 3
+      '' else if specialArgs.host == "ktop" then ''
+        monitor = eDP-1, 1920x1080@144, 0x0, 1
+        monitor = HDMI-A-1, 2560x1440@144, -2560x0, 1
+        monitor = DP-1, 3840x2160@144, -4720x0, 1, transform, 1
+      '' else ''
+        monitor = eDP-1, 1920x1080@144, 0x0, 1
+      ''}
 
       $terminal = ghostty
       $fileManager = dolphin

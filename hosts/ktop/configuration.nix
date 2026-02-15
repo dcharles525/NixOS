@@ -76,7 +76,7 @@
   };
   home-manager = {
     backupFileExtension = "backup";
-    extraSpecialArgs = { inherit inputs; };
+    extraSpecialArgs = { inherit inputs; host="ktop";};
     users = {
       "d" = import ./../../home.nix;
     };
@@ -326,8 +326,6 @@
   ];
 
   nixpkgs.config.android_sdk.accept_license = true;
-
-
 
   programs.gnupg.agent = {
     enable = true;

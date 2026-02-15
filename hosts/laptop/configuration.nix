@@ -21,7 +21,7 @@
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-
+  services.udisks2.enable = true;
   services.displayManager.ly.enable = true;
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -103,7 +103,7 @@
 
   home-manager = {
     backupFileExtension = "backup";
-    extraSpecialArgs = { inherit inputs; };
+    extraSpecialArgs = { inherit inputs; host="laptop";};
     users = {
       "d" = import ./../../home.nix;
     };
