@@ -27,6 +27,7 @@
   services.udisks2.enable = true;
   programs.vim.defaultEditor = true;
   system.stateVersion = "24.11";
+  services.power-profiles-daemon.enable = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   virtualisation.docker.enable = true;
   virtualisation.docker.daemon.settings = {
@@ -62,7 +63,7 @@
   };
   home-manager = {
     backupFileExtension = "backup";
-    extraSpecialArgs = { inherit inputs; };
+    extraSpecialArgs = { inherit inputs; host="desktop";};
     users = {
       "d" = import ./../../home.nix;
     };
@@ -266,6 +267,8 @@
     libreoffice
     chromium
     gotop
+    bambu-studio
+
   ];
 
   services.tailscale.enable = true;
