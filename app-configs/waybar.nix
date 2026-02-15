@@ -23,7 +23,6 @@
           "custom/disks"
           "temperature"
           "battery"
-          "battery#bat2"
           "custom/power-profile"
           "clock"
           "custom/suspend"
