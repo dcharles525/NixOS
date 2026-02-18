@@ -8,7 +8,8 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ./app-configs/vim.nix
+    ./../../app-configs/vim.nix
+    ./../../app-configs/tmux.nix
     inputs.home-manager.nixosModules.default
   ];
 
@@ -23,7 +24,7 @@
   boot.loader.efi.canTouchEfiVariables = true;
   services.udisks2.enable = true;
   services.displayManager.ly.enable = true;
-
+  services.power-profiles-daemon.enable = true;
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -157,6 +158,10 @@
     bolt-launcher
     runescape
     gotop
+  ];
+
+  nixpkgs.config.permittedInsecurePackages = [
+    "openssl-1.1.1w"
   ];
 
   fonts.packages = with pkgs; [
