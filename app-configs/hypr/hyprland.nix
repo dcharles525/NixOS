@@ -135,12 +135,9 @@
 
       $mainMod = SUPER # Sets "Windows" key as main modifier
 
-      # Screenshot a window
       bind = $mainMod, PRINT, exec, hyprshot -m window
-      # Screenshot a monitor
       bind = , PRINT, exec, hyprshot -m output
-      # Screenshot a region
-      bind = $shiftMod, PRINT, exec, hyprshot -m region
+      bind = $mainMod $shiftMod, PRINT, exec, hyprshot -m region
 
       bind = $mainMod, Q, exec, $terminal
       bind = $mainMod, C, killactive,

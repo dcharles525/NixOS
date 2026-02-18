@@ -89,7 +89,7 @@
   networking.hostName = "d";
   networking.networkmanager.enable = true;
   networking.wireless.iwd.enable = true;
-
+  networking.hosts."127.0.0.1" = ["localhost" "epinio.127.0.0.1.sslip.io" "auth.127.0.0.1.sslip.io"];
   systemd.services.NetworkManager-wait-online.enable = false;
 
   services.printing.enable = true;
@@ -100,6 +100,7 @@
       General = {
         Name = "Hello";
         ControllerMode = "dual";
+        
         FastConnectable = "true";
         Experimental = "true";
       };
@@ -274,7 +275,8 @@
     jdk21
     gnupg
     hugo
-    tigervnc
+    freerdp
+    gnome-connections
     pinentry-curses
     iotop
     sysstat
@@ -287,6 +289,7 @@
       flask
       flake8
     ]))
+    devcontainer
 
     # Computer Environment
     waybar
