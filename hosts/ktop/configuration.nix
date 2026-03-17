@@ -329,6 +329,8 @@
     postman
     qimgv
     libreoffice
+  ] ++ [
+    pkgs.addDriverRunpath
   ];
 
   nixpkgs.config.android_sdk.accept_license = true;
