@@ -290,6 +290,8 @@
       flake8
     ]))
     devcontainer
+    mermaid-cli
+    k6
 
     # Computer Environment
     waybar
@@ -305,6 +307,7 @@
     pulseaudio
     iw
     lemonbar
+    go-task
 
     # Media
     circumflex

@@ -16,12 +16,14 @@
   #
 
   programs.home-manager.enable = true;
+  programs.bash.enable = true;
   home.username = "d";
   home.homeDirectory = "/home/d";
   home.sessionVariables = {
     EDITOR = "vim";
   };
   home.stateVersion = "24.11";
+  home.sessionPath = [ "$HOME/.npm-packages/bin" ];
 
   home.file.".config/rofi/config.rasi".text = ''
     @import "${pkgs.rofi-unwrapped}/share/rofi/themes/gruvbox-dark-soft.rasi"

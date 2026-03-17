@@ -5,7 +5,7 @@
     general = {
       lock_cmd = "hyprlock";
       before_sleep_cmd = "hyprlock";
-      after_sleep_cmd = "sleep 0.5 && hyprctl dispatch dpms on";
+      after_sleep_cmd = "sleep 1 && hyprctl dispatch dpms on && sleep 1 && hyprctl reload";
     };
     listener = [
       {
