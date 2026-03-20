@@ -13,13 +13,13 @@
         monitor = , preferred, auto, 1
 
         workspace = 1, monitor:eDP-1, default:true
-        workspace = 2, monitor:eDP-1
-        workspace = 3, monitor:eDP-1
-        workspace = 4, monitor:HDMI-A-1, default:true
+        workspace = 2, monitor:HDMI-A-1, default:true
+        workspace = 3, monitor:DP-1, default:true
+        workspace = 4, monitor:eDP-1
         workspace = 5, monitor:HDMI-A-1
-        workspace = 6, monitor:HDMI-A-1
-        workspace = 7, monitor:DP-1, default:true
-        workspace = 8, monitor:DP-1
+        workspace = 6, monitor:DP-1
+        workspace = 7, monitor:eDP-1
+        workspace = 8, monitor:HDMI-A-1
         workspace = 9, monitor:DP-1
       '' else ''
         monitor = eDP-1, 1920x1080@144, 0x0, 1

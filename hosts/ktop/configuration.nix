@@ -288,10 +288,16 @@
       numpy
       flask
       flake8
+      pyyaml
     ]))
     devcontainer
     mermaid-cli
     k6
+    openshift
+    argocd
+
+    # Clipboard
+    wl-clipboard
 
     # Computer Environment
     waybar
