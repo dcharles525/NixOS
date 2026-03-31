@@ -52,6 +52,10 @@
       name = "Adwaita-dark";
       package = pkgs.gnome-themes-extra;
     };
+    gtk4.theme = {
+      name = "Adwaita-dark";
+      package = pkgs.gnome-themes-extra;
+    };
     cursorTheme = {
       package = pkgs.catppuccin-cursors.mochaDark;
       name = "pkgs.catppuccin-cursors.mochaDark";

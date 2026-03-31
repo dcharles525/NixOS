@@ -132,7 +132,7 @@
         "custom/disks" = {
           format = "🖴 {}";
           interval = 2;
-          exec = "iostat -dx 1 2 nvme1n1 | grep nvme1n1 | tail -1 | awk '{print $22\"%\"}'";
+          exec = "iostat -dx 1 2 nvme0n1 | grep nvme0n1 | tail -1 | awk '{print $22\"%\"}'";
         };
       };
     };
@@ -239,10 +239,6 @@
         box-shadow: none;
       }
 
-      #custom-disk {
-        background-color: #1e1e2e;
-        color: #cdd6f4;
-      }
     '';
   };
 
