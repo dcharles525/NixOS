@@ -268,7 +268,7 @@
     chromium
     gotop
     bambu-studio
-
+    discord
   ];
 
   services.tailscale.enable = true;
