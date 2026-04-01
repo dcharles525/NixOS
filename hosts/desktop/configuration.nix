@@ -75,6 +75,7 @@
   
   networking.hostName = "d";
   networking.networkmanager.enable = true;
+  networking.networkmanager.wifi.backend = "iwd";
   networking.wireless.iwd.enable = true;
 
   # Enable CUPS to print documents.
@@ -148,7 +149,7 @@
     mplus-outline-fonts.githubRelease
     #nerdfonts
     noto-fonts
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     proggyfonts
   ] ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 
@@ -196,7 +197,7 @@
 
   environment.systemPackages = with pkgs; [
     # Developer Tools
-    vim_configurable
+    vim-full
     go
     protobuf
     openssl
@@ -222,7 +223,7 @@
     dbeaver-bin
     docker-buildx
     pinentry-curses 
-    (python311.withPackages (ps: with ps; [
+    (python313.withPackages (ps: with ps; [
       pip
       requests
       numpy
@@ -235,19 +236,19 @@
     waybar
     gum
     ghostty
-    xorg.xhost
+    xhost
     hyprpaper
     hyprshot
     rofi-bluetooth
     catppuccin-cursors.mochaMauve
-    inputs.iwmenu.packages.${pkgs.system}.default
+    inputs.iwmenu.packages.${pkgs.stdenv.hostPlatform.system}.default
 
     # Media
     circumflex
     dunst
     libnotify
     swww
-    rofi-wayland
+    rofi
     nautilus
     iwd
     slack

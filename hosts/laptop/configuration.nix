@@ -34,6 +34,7 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+  networking.networkmanager.wifi.backend = "iwd";
   networking.wireless.iwd.enable = true;
 
   # Set your time zone.
@@ -75,7 +76,7 @@
   };
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -88,6 +89,29 @@
     # use the example session manager (no others are packaged yet so this is enabled by default,
     # no need to redefine it in your config for now)
     #media-session.enable = true;
+
+    wireplumber.extraConfig = {
+      "99-no-hdmi-autoswitch" = {
+        "monitor.alsa.rules" = [
+          {
+            matches = [ [ { "node.name" = "~alsa_output.*hdmi.*"; } ] ];
+            actions = {
+              update-props = {
+                "priority.session" = 0;
+              };
+            };
+          }
+          {
+            matches = [ [ { "node.name" = "~alsa_output.*dp.*"; } ] ];
+            actions = {
+              update-props = {
+                "priority.session" = 0;
+              };
+            };
+          }
+        ];
+      };
+    };
   };
 
   security.pam.services.hyprlock = {};
@@ -121,7 +145,7 @@
 
   programs.vim.defaultEditor = true;
   environment.systemPackages = with pkgs; [
-    vim_configurable
+    vim-full
     git
     tmux
     k9s
@@ -135,10 +159,10 @@
     dunst
     libnotify
     swww
-    rofi-wayland
+    rofi
     nautilus
     iwd
-    inputs.iwmenu.packages.${pkgs.system}.default
+    inputs.iwmenu.packages.${pkgs.stdenv.hostPlatform.system}.default
     iotop
     sysstat
 
@@ -172,7 +196,7 @@
     mplus-outline-fonts.githubRelease
     #nerdfonts
     noto-fonts
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     proggyfonts
   ] ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 

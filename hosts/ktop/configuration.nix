@@ -88,6 +88,7 @@
 
   networking.hostName = "d";
   networking.networkmanager.enable = true;
+  networking.networkmanager.wifi.backend = "iwd";
   networking.wireless.iwd.enable = true;
   networking.hosts."127.0.0.1" = ["localhost" "epinio.127.0.0.1.sslip.io" "auth.127.0.0.1.sslip.io"];
   systemd.services.NetworkManager-wait-online.enable = false;
@@ -150,7 +151,7 @@
     liberation_ttf
     mplus-outline-fonts.githubRelease
     noto-fonts
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     proggyfonts
   ] ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 
@@ -198,6 +199,37 @@
         default.clock.max-quantum = 2048;
       };
     };
+
+    wireplumber.extraConfig = {
+      "99-audio-rules" = {
+        "monitor.alsa.rules" = [
+          {
+            matches = [ [ { "node.name" = "~alsa_output.*hdmi.*"; } ] ];
+            actions = {
+              update-props = {
+                "priority.session" = 0;
+              };
+            };
+          }
+          {
+            matches = [ [ { "node.name" = "~alsa_output.*dp.*"; } ] ];
+            actions = {
+              update-props = {
+                "priority.session" = 0;
+              };
+            };
+          }
+          {
+            matches = [ [ { "device.name" = "alsa_card.pci-0000_00_1f.3-platform-skl_hda_dsp_generic"; } ] ];
+            actions = {
+              update-props = {
+                "api.acp.auto-profile" = true;
+              };
+            };
+          }
+        ];
+      };
+    };
   };
 
   #
@@ -205,7 +237,7 @@
   #
 
   programs.nix-ld.enable = true;
-  programs.adb.enable = true;
+  users.groups.adbusers = {};
   services.udisks2.enable = true;
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0660", GROUP="adbusers"
@@ -229,14 +261,15 @@
         url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/24.05.tar.gz";
         sha256 = "1lr1h35prqkd1mkmzriwlpvxcb34kmhc9dnr48gkm8hh089hifmx";
       }) {
-        inherit (final) config system;
+        system = final.stdenv.hostPlatform.system;
       }).go_1_22;
     })
   ];
 
   environment.systemPackages = with pkgs; [
     # Developer Tools
-    vim_configurable
+    android-tools
+    vim-full
     go_1_22
     golangci-lint
     protobuf
@@ -282,36 +315,45 @@
     sysstat
     openfortivpn
     openfortivpn-webview
-    (python311.withPackages (ps: with ps; [
+    (python313.withPackages (ps: with ps; [
       pip
       requests
       numpy
       flask
       flake8
+      pyyaml
     ]))
     devcontainer
+    mermaid-cli
+    k6
+    openshift
+    argocd
+
+    # Clipboard
+    wl-clipboard
 
     # Computer Environment
     waybar
     gum
     ghostty
-    xorg.xhost
+    xhost
     hyprpaper
     hyprshot
     rofi-bluetooth
     catppuccin-cursors.mochaMauve
-    inputs.iwmenu.packages.${pkgs.system}.default
+    inputs.iwmenu.packages.${pkgs.stdenv.hostPlatform.system}.default
     brightnessctl
     pulseaudio
     iw
     lemonbar
+    go-task
 
     # Media
     circumflex
     dunst
     libnotify
     swww
-    rofi-wayland
+    rofi
     nautilus
     iwd
     slack

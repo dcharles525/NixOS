@@ -10,6 +10,17 @@
         monitor = eDP-1, 1920x1080@144, 0x0, 1
         monitor = HDMI-A-1, 2560x1440@144, -2560x0, 1
         monitor = DP-1, 3840x2160@144, -4720x0, 1, transform, 1
+        monitor = , preferred, auto, 1
+
+        workspace = 1, monitor:eDP-1, default:true
+        workspace = 2, monitor:HDMI-A-1, default:true
+        workspace = 3, monitor:DP-1, default:true
+        workspace = 4, monitor:eDP-1
+        workspace = 5, monitor:HDMI-A-1
+        workspace = 6, monitor:DP-1
+        workspace = 7, monitor:eDP-1
+        workspace = 8, monitor:HDMI-A-1
+        workspace = 9, monitor:DP-1
       '' else ''
         monitor = eDP-1, 1920x1080@144, 0x0, 1
       ''}
@@ -125,7 +136,6 @@
       }
 
       gestures {
-        workspace_swipe = false
       }
 
       device {
@@ -205,9 +215,9 @@
       bindl = , XF86AudioPlay, exec, playerctl play-pause
       bindl = , XF86AudioPrev, exec, playerctl previous
 
-      windowrulev2 = suppressevent maximize, class:.*
+      windowrule = suppress_event maximize, match:class .*
 
-      windowrulev2 = nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0
+      windowrule = no_focus on, match:class ^$, match:title ^$, match:xwayland 1, match:fullscreen 0
     '';
   };
 }
