@@ -53,7 +53,11 @@ fi
 
 
 
+HIGHLINE=${HIGHLINE:-0}
 CHENTRY=$(echo -e "$TOGGLE\nmanual\n$LIST" | uniq -u | rofi -dmenu -p "Wi-Fi SSID: " -lines "$LINENUM" -a "$HIGHLINE" -location "$POSITION" -yoffset "$YOFF" -xoffset "$XOFF" -font "$FONT" -width -"$RWIDTH")
+
+# Exit if user cancelled
+[[ -z "$CHENTRY" ]] && exit 0
 #echo "$CHENTRY"
 CHSSID=$(echo "$CHENTRY" | sed  's/\s\{2,\}/\|/g' | awk -F "|" '{print $1}')
 #echo "$CHSSID"
@@ -72,7 +76,6 @@ if [ "$CHENTRY" = "manual" ] ; then
 	if [ "$MPASS" = "" ]; then
 		nmcli dev wifi con "$MSSID"
 	else
-    nmcli connection delete "$MSSID"
 		nmcli dev wifi con "$MSSID" password "$MPASS"
 	fi
 
@@ -90,13 +93,12 @@ else
 	fi
 
 	# Parses the list of preconfigured connections to see if it already contains the chosen SSID. This speeds up the connection process
-	if [[ $(echo "$KNOWNCON" | grep "$CHSSID") = "$CHSSID" ]]; then
+	if [[ $(echo "$KNOWNCON" | grep -F "$CHSSID") = "$CHSSID" ]]; then
 		nmcli con up "$CHSSID"
 	else
 		if [[ "$CHENTRY" =~ "WPA2" ]] || [[ "$CHENTRY" =~ "WEP" ]]; then
 			WIFIPASS=$(echo "if connection is stored, hit enter" | rofi -dmenu -p "password: " -lines 1 -font "$FONT" )
 		fi
-    nmcli connection delete "$CHSSID"
 		nmcli dev wifi con "$CHSSID" password "$WIFIPASS"
 	fi
 

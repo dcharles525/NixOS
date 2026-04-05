@@ -7,39 +7,40 @@
         browser = "${config.programs.firefox.package}/bin/firefox -new-tab";
         dmenu = "${pkgs.rofi}/bin/rofi -dmenu";
         follow = "mouse";
-        font = "Droid Sans 10";
+        font = "JetBrains Mono 10";
         format = "<b>%s</b>\\n%b";
-        frame_color = "#555555";
-        frame_width = 2;
-        geometry = "500x5-5+30";
-        horizontal_padding = 8;
+        frame_width = 1;
+        width = 300;
+        origin = "top-right";
+        offset = "10x0";
+        horizontal_padding = 12;
         icon_position = "off";
         line_height = 0;
         markup = "full";
-        padding = 8;
+        padding = 12;
         separator_color = "frame";
-        separator_height = 2;
-        transparency = 10;
+        separator_height = 1;
+        transparency = 0;
         word_wrap = true;
-        corner_radius = 10;
+        corner_radius = 15;
       };
 
       urgency_low = {
-        background = "#1d1f21";
+        background = "#000000a6";
         foreground = "#4da1af";
-        frame_color = "#4da1af";
+        frame_color = "#4da1af40";
         timeout = 10;
       };
 
       urgency_normal = {
-        background = "#1d1f21";
+        background = "#000000a6";
         foreground = "#70a040";
-        frame_color = "#70a040";
+        frame_color = "#70a04040";
         timeout = 15;
       };
 
       urgency_critical = {
-        background = "#1d1f21";
+        background = "#00000090";
         foreground = "#dd5633";
         frame_color = "#dd5633";
         timeout = 0;

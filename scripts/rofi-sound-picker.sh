@@ -25,11 +25,19 @@ p = subprocess.Popen(
     stdout=subprocess.PIPE,
 )
 selected = p.communicate(input="\n".join(descriptions).encode("utf8"))[0].decode("utf8").strip()
-selected_name = [s["name"] for s in sinks if s["description"] == selected][0]
-try:
-    subprocess.check_call(shlex.split(f"pactl set-default-sink {selected_name}"))
-except subprocess.CalledProcessError:
-    subprocess.check_call(shlex.split(f'dunstify -t 2000 -r 2 -u low "Error activating: {selected}"'))
+
+if p.returncode != 0 or not selected:
+    exit(0)
+
+matching = [s["name"] for s in sinks if s["description"] == selected]
+if not matching:
     exit(1)
-subprocess.check_call(shlex.split(f'dunstify -t 2000 -r 2 -u low "Activated: {selected}"'))
+selected_name = matching[0]
+
+try:
+    subprocess.check_call(["pactl", "set-default-sink", selected_name])
+except subprocess.CalledProcessError:
+    subprocess.check_call(["dunstify", "-t", "2000", "-r", "2", "-u", "low", f"Error activating: {selected}"])
+    exit(1)
+subprocess.check_call(["dunstify", "-t", "2000", "-r", "2", "-u", "low", f"Activated: {selected}"])
 
