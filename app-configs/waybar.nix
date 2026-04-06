@@ -155,7 +155,8 @@
       .modules-left,
       .modules-center,
       .modules-right {
-        background: rgba(0, 0, 8, .7);
+        background: rgba(0, 0, 0, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         margin: 5px 5px;
         border-radius: 15px;
       }
@@ -213,8 +214,11 @@
       #scratchpad:hover,
       #power-profiles-daemon:hover,
       #language:hover,
+      #custom-poweroff:hover,
+      #custom-suspend:hover,
+      #custom-disks:hover,
       #mpd:hover {
-        background: rgba(26, 27, 38, 0.9);
+        background: rgba(255, 255, 255, 0.08);
       }
 
       #workspaces button {
@@ -225,16 +229,16 @@
         font-weight: 900;
         font-size: 13pt;
         color: #FFC519;
-        border:none;
+        border: none;
         border-radius: 15px;
       }
 
       #workspaces button.active {
-        background: #13131d;
+        background: rgba(255, 255, 255, 0.1);
       }
 
       #workspaces button:hover {
-        background: #11111b;
+        background: rgba(255, 255, 255, 0.08);
         color: #FFC519;
         box-shadow: none;
       }

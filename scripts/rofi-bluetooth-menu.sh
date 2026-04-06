@@ -296,7 +296,7 @@ show_menu() {
             toggle_pairable
             ;;
         *)
-            device=$(bluetoothctl devices | grep "$chosen")
+            device=$(bluetoothctl devices | grep -F "$chosen")
             # Open a submenu if a device is selected
             if [[ $device ]]; then device_menu "$device"; fi
             ;;
@@ -305,6 +305,9 @@ show_menu() {
 
 # Rofi command to pipe into, can add any options here
 rofi_command="rofi -dmenu $* -p"
+
+# Timeout (seconds) for connection attempts
+BT_TIMEOUT=10
 
 case "$1" in
     --status)

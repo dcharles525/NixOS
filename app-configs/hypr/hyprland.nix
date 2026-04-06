@@ -30,7 +30,6 @@
       $menu = wofi --show drun
 
       exec-once = waybar
-      exec-once=sleep 5 && hyprpaper &
 
       cursor {
         enable_hyprcursor = false
@@ -192,13 +191,11 @@
       bind = $mainMod SHIFT, K, moveactive, 0 -30
       bind = $mainMod SHIFT, J, moveactive, 0 30
 
-      bind = $mainMod, S, togglespecialworkspace, magic
+      bind = $mainMod, S, exec, rofi -show drun -show-icons
       bind = $mainMod SHIFT, S, movetoworkspace, special:magic
 
       bind = $mainMod, mouse_down, workspace, e+1
       bind = $mainMod, mouse_up, workspace, e-1
-
-      bind = $mainMod, S, exec, rofi -show drun -show-icons
 
       bindm = $mainMod, mouse:272, movewindow
       bindm = $mainMod, mouse:273, resizewindow

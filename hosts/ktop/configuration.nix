@@ -322,6 +322,7 @@
       flask
       flake8
       pyyaml
+      alembic
     ]))
     devcontainer
     mermaid-cli
