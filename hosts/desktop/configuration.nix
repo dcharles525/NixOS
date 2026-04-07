@@ -189,12 +189,6 @@
     "openssl-1.1.1w"
   ];
 
-  nixpkgs.config.packageOverrides = pkgs: {
-    bolt-launcher = pkgs.bolt-launcher.override {
-      enableRS3 = true;
-    };
-  };
-
   environment.systemPackages = with pkgs; [
     # Developer Tools
     vim-full
@@ -258,8 +252,6 @@
     lemonbar
 
     # Misc Apps
-    bolt-launcher
-    runescape
     gparted
     rpi-imager
     partclone
@@ -272,6 +264,17 @@
     discord
   ];
 
+  services.flatpak = {
+    enable = true;
+    remotes = [{
+      name = "flathub";
+      location = "https://flathub.org/repo/flathub.flatpakrepo";
+    }];
+    packages = [
+      "com.adamcake.Bolt"
+      "org.freedesktop.Platform.GL.nvidia-595-58-03"
+    ];
+  };
   services.tailscale.enable = true;
   programs.vim.enable = true;
   programs.firefox.enable = true;
