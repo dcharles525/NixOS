@@ -135,6 +135,7 @@
   # Display and DE Enablement
   #
   services.upower.enable = true;
+  services.fwupd.enable = true;
   # Optimize upower to not slow boot
   services.upower.noPollBatteries = false;
   services.displayManager.ly.enable = true;

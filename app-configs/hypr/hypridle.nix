@@ -3,9 +3,11 @@
   services.hypridle.enable = true;
   services.hypridle.settings = {
     general = {
-      lock_cmd = "hyprlock";
-      before_sleep_cmd = "hyprlock";
-      after_sleep_cmd = "sleep 1 && hyprctl dispatch dpms on";
+      lock_cmd = "pidof hyprlock || hyprlock";
+      before_sleep_cmd = "pidof hyprlock || hyprlock";
+      # Kill stale hyprlock (wrong monitor layout) and relaunch with current outputs.
+      # Brief relock gap is acceptable here — the crash was leaving screen fully unlocked.
+      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on; sleep 1; pkill -x hyprlock; hyprlock &";
     };
     listener = [
       {
