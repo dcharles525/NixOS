@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
     iwmenu.url = "github:e-tho/iwmenu";
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -19,6 +20,7 @@
         modules = [
           ./hosts/desktop/configuration.nix
           inputs.home-manager.nixosModules.default
+          inputs.nix-flatpak.nixosModules.nix-flatpak
         ];
       };
       laptop = nixpkgs.lib.nixosSystem {
