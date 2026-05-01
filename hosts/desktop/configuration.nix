@@ -52,7 +52,10 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelParams = [ "systemd.unified_cgroup_hierarchy=1" ];
+  boot.kernelParams = [ 
+    "systemd.unified_cgroup_hierarchy=1"
+    "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
+  ];
 
   # User Setup
 
@@ -132,12 +135,13 @@
   };
   hardware.nvidia = {
     modesetting.enable = true;
-    powerManagement.enable = false;
+    powerManagement.enable = true;
     powerManagement.finegrained = false;
     open = false;
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
+  hardware.nvidia-container-toolkit.enable = true;
   services.xserver.videoDrivers = [ "nvidia" ];
 
   security.pam.services.hyprlock = {};
@@ -252,6 +256,7 @@
     lemonbar
 
     # Misc Apps
+    steam
     gparted
     rpi-imager
     partclone
@@ -280,5 +285,3 @@
   programs.firefox.enable = true;
 
 }
-
-
