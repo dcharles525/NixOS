@@ -75,6 +75,7 @@
     extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" ];
   };
   home-manager = {
+    useGlobalPkgs = true;
     backupFileExtension = "backup";
     extraSpecialArgs = { inherit inputs; host="ktop";};
     users = {
@@ -264,6 +265,19 @@
       }) {
         system = final.stdenv.hostPlatform.system;
       }).go_1_22;
+    })
+
+    # hyprlock 0.9.5 — fixes EGL teardown crash; remove once nixpkgs-unstable updates
+    (final: prev: {
+      hyprlock = prev.hyprlock.overrideAttrs (_old: {
+        version = "0.9.5";
+        src = prev.fetchFromGitHub {
+          owner = "hyprwm";
+          repo = "hyprlock";
+          rev = "v0.9.5";
+          hash = "sha256-VFlM1cN4jmUAbfmZbeg7vL+AN9miXEUqqpk5EkHNq2c=";
+        };
+      });
     })
   ];
 
