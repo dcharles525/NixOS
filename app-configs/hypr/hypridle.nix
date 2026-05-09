@@ -4,8 +4,10 @@
   services.hypridle.settings = {
     general = {
       lock_cmd = "pidof hyprlock || hyprlock";
-      before_sleep_cmd = "pidof hyprlock || hyprlock";
-      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on";
+      # Disable externals before suspend so topology changes happen outside
+      # the resume path — Hyprland 0.54.3 aborts when outputs disappear mid-resume.
+      before_sleep_cmd = "hyprctl keyword monitor 'HDMI-A-1, disable'; hyprctl keyword monitor 'DP-1, disable'; pidof hyprlock || hyprlock";
+      after_sleep_cmd = "sleep 2; hyprctl reload; hyprctl dispatch dpms on";
     };
     listener = [
       {

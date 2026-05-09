@@ -162,6 +162,15 @@
     xwayland.enable = true;
   };
 
+  # Retain coredumps so we can backtrace Hyprland/hyprlock/hyprpaper aborts
+  # on suspend/resume. Inspect with: coredumpctl info <exe-or-pid>
+  systemd.coredump.settings.Coredump = {
+    Storage = "external";
+    Compress = "yes";
+    ProcessSizeMax = "2G";
+    MaxUse = "2G";
+  };
+
   xdg.portal = {
     enable = true;
     extraPortals = [
@@ -285,6 +294,7 @@
     # Developer Tools
     android-tools
     vim-full
+    ripgrep
     go_1_22
     golangci-lint
     protobuf
@@ -375,6 +385,7 @@
     slack
 
     # Misc Apps
+    chromium
     bc
     gotop
     gparted

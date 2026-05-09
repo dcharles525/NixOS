@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-# Starts a scan of available broadcasting SSIDs
-nmcli dev wifi rescan
+# Kick off a rescan in the background so the menu shows immediately.
+# Cached results are good enough for the picker; a fresh scan lands for next launch.
+nmcli dev wifi rescan >/dev/null 2>&1 &
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -25,8 +26,8 @@ LIST=$(nmcli --fields "$FIELDS" device wifi list | sed '/^--/d')
 RWIDTH=$(($(echo "$LIST" | head -n 1 | awk '{print length($0); }')+2))
 # Dynamically change the height of the rofi menu
 LINENUM=$(echo "$LIST" | wc -l)
-# Gives a list of known connections so we can parse it later
-KNOWNCON=$(nmcli connection show)
+# Gives a list of known connection NAMES (first column only) so we can match exactly later
+KNOWNCON=$(nmcli -t -f NAME connection show)
 # Really janky way of telling if there is currently a connection
 CONSTATE=$(nmcli -fields WIFI g)
 
@@ -92,14 +93,18 @@ else
 		CHSSID=$(echo "$CHENTRY" | sed  's/\s\{2,\}/\|/g' | awk -F "|" '{print $3}')
 	fi
 
-	# Parses the list of preconfigured connections to see if it already contains the chosen SSID. This speeds up the connection process
-	if [[ $(echo "$KNOWNCON" | grep -F "$CHSSID") = "$CHSSID" ]]; then
+	# Exact-match against known connection names so saved networks use `con up` (no re-auth).
+	if echo "$KNOWNCON" | grep -Fxq "$CHSSID"; then
 		nmcli con up "$CHSSID"
 	else
-		if [[ "$CHENTRY" =~ "WPA2" ]] || [[ "$CHENTRY" =~ "WEP" ]]; then
+		if [[ "$CHENTRY" =~ WPA|WEP|SAE|802\.1X ]]; then
 			WIFIPASS=$(echo "if connection is stored, hit enter" | rofi -dmenu -p "password: " -lines 1 -font "$FONT" )
 		fi
-		nmcli dev wifi con "$CHSSID" password "$WIFIPASS"
+		if [ -z "$WIFIPASS" ]; then
+			nmcli dev wifi con "$CHSSID"
+		else
+			nmcli dev wifi con "$CHSSID" password "$WIFIPASS"
+		fi
 	fi
 
 fi

@@ -12,9 +12,13 @@
         monitor = DP-1, 3840x2160@144, -4720x0, 1, transform, 1
         monitor = , preferred, auto, 1
 
+        # Only eDP-1 is guaranteed to exist — never pin `default:true` to a
+        # monitor that may be absent at resume; orphaned default workspaces
+        # have triggered Hyprland std::system_error aborts on suspend/resume
+        # with monitor topology changes.
         workspace = 1, monitor:eDP-1, default:true
-        workspace = 2, monitor:HDMI-A-1, default:true
-        workspace = 3, monitor:DP-1, default:true
+        workspace = 2, monitor:HDMI-A-1
+        workspace = 3, monitor:DP-1
         workspace = 4, monitor:eDP-1
         workspace = 5, monitor:HDMI-A-1
         workspace = 6, monitor:DP-1

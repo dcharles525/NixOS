@@ -20,6 +20,15 @@
 
             };
           })
+          (pkgs.vimUtils.buildVimPlugin {
+            name = "ctrlsf";
+            src = pkgs.fetchFromGitHub {
+              owner = "dyng";
+              repo = "ctrlsf.vim";
+              rev = "v2.6.0";
+              sha256 = "sha256-sa9YuPmtk3NtKkOhg8lCrvjDFibuMynFf5qY0y6bQTQ=";
+            };
+          })
         ];
         opt = [];
       };
@@ -54,6 +63,8 @@
         silent! helptags ALL
         au filetype go inoremap <buffer> . .<C-x><C-o>
         let g:vim_ai_token_file_path = '~/.config/openai.token'
+
+        let g:ctrlsf_position = 'bottom'
 
         let g:vim_ai_chat = {
           \  "options": {
