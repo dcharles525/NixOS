@@ -227,7 +227,7 @@
     };
     cursorTheme = {
       package = pkgs.catppuccin-cursors.mochaDark;
-      name = "pkgs.catppuccin-cursors.mochaDark";
+      name = "catppuccin-mocha-dark-cursors";
     };
   };
 }

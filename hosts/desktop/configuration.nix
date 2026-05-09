@@ -29,6 +29,28 @@
   system.stateVersion = "24.11";
   services.power-profiles-daemon.enable = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  # Enable nix-ld so unpatched binaries (e.g. rs2client from Bolt) can resolve
+  # shared libraries via NIX_LD_LIBRARY_PATH at runtime.
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      SDL2
+      libglvnd          # libEGL.so.1, libOpenGL.so.0, libGL.so.1 — dispatch layer
+      mesa              # libEGL_mesa.so.0, libGLX_mesa.so.0 — Mesa implementation for Zink
+      openssl_1_1       # libcrypto.so.1.1, libssl.so.1.1 — rs2client links against OpenSSL 1.1
+      zlib
+      vulkan-loader     # Vulkan ICD loader — needed when rs2client uses MESA_LOADER_DRIVER_OVERRIDE=zink
+      stdenv.cc.cc.lib  # libstdc++.so.6
+    ];
+  };
+
+  powerManagement.enable = true;
+
+  # Enable wakeup for USB HID devices (keyboard/mouse) so they can resume from S3 suspend.
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="usb", DRIVER=="usbhid", ATTR{power/wakeup}="enabled"
+  '';
+
   virtualisation.docker.enable = true;
   virtualisation.docker.daemon.settings = {
       dns = [ "1.1.1.1" ];
@@ -52,9 +74,10 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelParams = [ 
+  boot.kernelParams = [
     "systemd.unified_cgroup_hierarchy=1"
     "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
+    "nvidia_drm.modeset=1"
   ];
 
   # User Setup
@@ -132,6 +155,7 @@
   };
   hardware.graphics = {
     enable = true;
+    enable32Bit = true;
   };
   hardware.nvidia = {
     modesetting.enable = true;
@@ -169,8 +193,8 @@
   };
 
   xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-  xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-gtk ];
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-hyprland pkgs.xdg-desktop-portal-gtk ];
+  xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
 
   #
   # Enable sound with pipewire.
@@ -195,6 +219,7 @@
 
   environment.systemPackages = with pkgs; [
     # Developer Tools
+    android-tools
     vim-full
     go
     protobuf
@@ -229,6 +254,7 @@
     ]))
     iotop
     sysstat
+    claude-code
 
     # Computer Environment
     waybar
@@ -256,7 +282,6 @@
     lemonbar
 
     # Misc Apps
-    steam
     gparted
     rpi-imager
     partclone
@@ -277,11 +302,34 @@
     }];
     packages = [
       "com.adamcake.Bolt"
-      "org.freedesktop.Platform.GL.nvidia-595-58-03"
+      "org.freedesktop.Platform.GL.nvidia-595-71-05"
+      "org.freedesktop.Platform.GL32.nvidia-595-71-05"
     ];
+    overrides = {
+      "com.adamcake.Bolt" = {
+        Context.devices = "all";
+        # RS3 renders via Zink (Mesa OpenGL-over-Vulkan) to avoid NVIDIA's broken
+        # EGL+Wayland path. VK_DRIVER_FILES is the critical var — it points Vulkan
+        # to the correct NVIDIA ICD so Zink uses the GPU rather than llvmpipe.
+        # The GL extension version (nvidia-595-71-05) must exactly match the running
+        # driver or Vulkan gets VK_ERROR_DEVICE_LOST. rs_launch_command in
+        # ~/.config/bolt-launcher/launcher.json sets the Zink env vars.
+        Environment.variables = "__EGL_VENDOR_LIBRARY_DIRS=/usr/lib/x86_64-linux-gnu/GL/glvnd/egl_vendor.d;LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/GL/nvidia-595-71-05/lib;VK_DRIVER_FILES=/usr/lib/x86_64-linux-gnu/GL/vulkan/icd.d/nvidia_icd.json";
+      };
+    };
   };
   services.tailscale.enable = true;
   programs.vim.enable = true;
   programs.firefox.enable = true;
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+  };
+
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
 
 }
