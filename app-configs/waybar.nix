@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, host, ... }:
 {
   programs.waybar = {
     enable = true;
@@ -20,10 +20,11 @@
           "bluetooth"
           "cpu"
           "memory"
+        ] ++ (if host == "desktop" then [ "custom/gpu" ] else []) ++ [
           "custom/disks"
           "temperature"
           "battery"
-          "custom/power-profile"
+        ] ++ (if host != "desktop" then [ "custom/power-profile" ] else []) ++ [
           "clock"
           "custom/suspend"
           "custom/poweroff"
@@ -134,7 +135,15 @@
           interval = 2;
           exec = "iostat -dx 1 2 nvme0n1 | grep nvme0n1 | tail -1 | awk '{print $22\"%\"}'";
         };
-      };
+      } // (if host == "desktop" then {
+        "custom/gpu" = {
+          format = "󰘚  {}";
+          interval = 2;
+          exec = "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | xargs printf '%s%%'";
+          tooltip = true;
+          tooltip-format = "GPU Usage";
+        };
+      } else {});
     };
     style = ''
       * {
@@ -191,6 +200,7 @@
       #custom-poweroff,
       #custom-suspend,
       #custom-disks,
+      #custom-gpu,
       #mpd {
         padding: 2px 10px;
         border-radius: 15px;
@@ -217,6 +227,7 @@
       #custom-poweroff:hover,
       #custom-suspend:hover,
       #custom-disks:hover,
+      #custom-gpu:hover,
       #mpd:hover {
         background: rgba(255, 255, 255, 0.08);
       }
