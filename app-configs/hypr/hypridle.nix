@@ -4,19 +4,8 @@
   services.hypridle.settings = {
     general = {
       lock_cmd = "pidof hyprlock || hyprlock";
-      # Desktop: monitors are permanently connected — just lock, no topology changes needed.
-      # ktop: disable externals before suspend so topology changes happen outside the resume
-      # path — Hyprland 0.54.3 aborts when outputs disappear mid-resume (see memory/nixos-ktop.md).
-      before_sleep_cmd =
-        if specialArgs.host == "desktop"
-        then "pidof hyprlock || hyprlock"
-        else "hyprctl keyword monitor 'HDMI-A-1, disable'; hyprctl keyword monitor 'DP-1, disable'; pidof hyprlock || hyprlock";
-      # Desktop: monitors were never disabled, just restore DPMS with extra time for NVIDIA.
-      # ktop: reload config to re-enable monitors that were disabled before sleep.
-      after_sleep_cmd =
-        if specialArgs.host == "desktop"
-        then "sleep 3; hyprctl dispatch dpms on"
-        else "sleep 2; hyprctl reload; hyprctl dispatch dpms on";
+      before_sleep_cmd = "pidof hyprlock || hyprlock";
+      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on; pidof hyprlock || (sleep 2; hyprlock &)";
     };
     listener = [
       {
@@ -37,7 +26,7 @@
       }
       {
         timeout = 1800;
-        on-timeout = "hyprctl dispatch dpms off";
+        on-timeout = "pgrep -x hyprlock || hyprctl dispatch dpms off";
         on-resume = "hyprctl dispatch dpms on && brightnessctl -r";
       }
       {

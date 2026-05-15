@@ -160,6 +160,8 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
   # Retain coredumps so we can backtrace Hyprland/hyprlock/hyprpaper aborts
@@ -174,7 +176,6 @@
   xdg.portal = {
     enable = true;
     extraPortals = [
-      pkgs.xdg-desktop-portal-hyprland
       pkgs.xdg-desktop-portal-gtk
     ];
     config = {
@@ -276,18 +277,6 @@
       }).go_1_22;
     })
 
-    # hyprlock 0.9.5 — fixes EGL teardown crash; remove once nixpkgs-unstable updates
-    (final: prev: {
-      hyprlock = prev.hyprlock.overrideAttrs (_old: {
-        version = "0.9.5";
-        src = prev.fetchFromGitHub {
-          owner = "hyprwm";
-          repo = "hyprlock";
-          rev = "v0.9.5";
-          hash = "sha256-VFlM1cN4jmUAbfmZbeg7vL+AN9miXEUqqpk5EkHNq2c=";
-        };
-      });
-    })
   ];
 
   environment.systemPackages = with pkgs; [
@@ -306,6 +295,7 @@
     k9s
     yarn
     nodejs
+    ruby
     tailscale
     k3d
     minikube
