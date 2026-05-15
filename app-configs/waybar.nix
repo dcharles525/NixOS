@@ -24,7 +24,7 @@
           "custom/disks"
           "temperature"
           "battery"
-        ] ++ (if host != "desktop" then [ "custom/power-profile" ] else []) ++ [
+        ] ++ (if host != "desktop" then [ "custom/power-profile" "custom/mirror" ] else []) ++ [
           "clock"
           "custom/suspend"
           "custom/poweroff"
@@ -135,6 +135,14 @@
           interval = 2;
           exec = "iostat -dx 1 2 nvme0n1 | grep nvme0n1 | tail -1 | awk '{print $22\"%\"}'";
         };
+        "custom/mirror" = {
+          exec = "${config.home.homeDirectory}/.config/waybar/scripts/mirror-toggle.sh get";
+          on-click = "${config.home.homeDirectory}/.config/waybar/scripts/mirror-toggle.sh toggle";
+          interval = 2;
+          format = "{}";
+          tooltip = true;
+          tooltip-format = "Toggle HDMI mirror mode";
+        };
       } // (if host == "desktop" then {
         "custom/gpu" = {
           format = "󰘚  {}";
@@ -201,6 +209,7 @@
       #custom-suspend,
       #custom-disks,
       #custom-gpu,
+      #custom-mirror,
       #mpd {
         padding: 2px 10px;
         border-radius: 15px;
@@ -228,6 +237,7 @@
       #custom-suspend:hover,
       #custom-disks:hover,
       #custom-gpu:hover,
+      #custom-mirror:hover,
       #mpd:hover {
         background: rgba(255, 255, 255, 0.08);
       }
@@ -255,6 +265,38 @@
       }
 
     '';
+  };
+
+  home.file.".config/waybar/scripts/mirror-toggle.sh" = {
+    text = ''
+      #!/usr/bin/env bash
+
+      STATE_FILE="/tmp/hypr-mirror-hdmi"
+
+      toggle() {
+          if [ -f "$STATE_FILE" ]; then
+              hyprctl keyword monitor "HDMI-A-1,2560x1440@144,-2560x0,1"
+              rm -f "$STATE_FILE"
+          else
+              hyprctl keyword monitor "HDMI-A-1,preferred,auto,1,mirror,eDP-1"
+              touch "$STATE_FILE"
+          fi
+      }
+
+      get() {
+          if [ -f "$STATE_FILE" ]; then
+              echo "󰍺 On"
+          else
+              echo "󰍺"
+          fi
+      }
+
+      case "$1" in
+          "toggle") toggle ;;
+          *) get ;;
+      esac
+    '';
+    executable = true;
   };
 
   home.file.".config/waybar/scripts/power-profile.sh" = {
