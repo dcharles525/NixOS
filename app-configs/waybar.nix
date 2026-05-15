@@ -115,7 +115,7 @@
         "custom/suspend" = {
           format = "⏾";
           tooltip-format = "Sleeply Time";
-          on-click = "loginctl lock-session && sleep 1 && systemctl suspend";
+          on-click = "loginctl lock-session; sleep 1; systemctl suspend";
         };
         "custom/poweroff" = {
           format = "⏻ ";
