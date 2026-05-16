@@ -282,10 +282,6 @@
               hyprctl keyword monitor "HDMI-A-1,preferred,auto,1,mirror,eDP-1"
               touch "$STATE_FILE"
           fi
-          sleep 1
-          pkill -x waybar || true
-          sleep 1
-          pgrep -x waybar || hyprctl dispatch exec waybar
       }
 
       get() {
