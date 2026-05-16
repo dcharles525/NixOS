@@ -6,16 +6,17 @@ in
   programs.hyprlock = {
     enable = true;
     extraConfig = ''
+      # GENERAL
+      general {
+          hide_cursor = true
+          ignore_empty_input = true
+      }
+
       # BACKGROUND
       background {
         monitor =
         path = ${background}
         blur_passes = 2
-      }
-
-      # GENERAL
-      general {
-          hide_cursor = false
       }
 
       # INPUT FIELD

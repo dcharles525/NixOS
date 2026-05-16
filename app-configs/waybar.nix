@@ -134,7 +134,12 @@
         "custom/disks" = {
           format = "🖴 {}";
           interval = 2;
-          exec = "iostat -dx 1 2 nvme0n1 | grep nvme0n1 | tail -1 | awk '{print $22\"%\"}'";
+          exec =
+            let
+              # desktop: nvme0n1 (root). ktop: dm-0 (LUKS device mapper over nvme0n1).
+              dev = if host == "desktop" then "nvme0n1" else "dm-0";
+            in
+            "iostat -dx 1 2 ${dev} | grep ${dev} | tail -1 | awk '{print $NF\"%\"}'";
         };
         "custom/mirror" = {
           exec = "${config.home.homeDirectory}/.config/waybar/scripts/mirror-toggle.sh get";

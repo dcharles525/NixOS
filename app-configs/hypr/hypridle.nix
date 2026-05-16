@@ -26,6 +26,9 @@
       }
       {
         timeout = 1800;
+        # Skip dpms off if hyprlock is already running — dpms off while locked causes
+        # topology changes that crash hyprlock or leave displays unrecoverable on NVIDIA.
+        # (see: hyprwm/hyprlock#953 comment by @eliasnema)
         on-timeout = "pgrep -x hyprlock || hyprctl dispatch dpms off";
         on-resume = "hyprctl dispatch dpms on && brightnessctl -r";
       }

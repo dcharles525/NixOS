@@ -46,9 +46,11 @@
 
   powerManagement.enable = true;
 
-  # Enable wakeup for USB HID devices (keyboard/mouse) so they can resume from S3 suspend.
+  # Enable wakeup for USB HID devices (keyboard/mouse) so they can resume from s2idle.
+  # Logitech Bolt receiver (046d:c548) excluded — it polls continuously and wakes s2idle instantly.
   services.udev.extraRules = ''
     ACTION=="add", SUBSYSTEM=="usb", DRIVER=="usbhid", ATTR{power/wakeup}="enabled"
+    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
   '';
 
   virtualisation.docker.enable = true;
@@ -78,6 +80,8 @@
     "systemd.unified_cgroup_hierarchy=1"
     "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
     "nvidia_drm.modeset=1"
+    # S3 hard-freezes on NVIDIA resume (confirmed twice). s2idle survives cleanly.
+    "mem_sleep_default=s2idle"
   ];
 
   # User Setup
@@ -184,6 +188,8 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
   programs.waybar = {
@@ -193,7 +199,7 @@
   };
 
   xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-hyprland pkgs.xdg-desktop-portal-gtk ];
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
 
   #
