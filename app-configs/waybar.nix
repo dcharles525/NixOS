@@ -258,6 +258,8 @@
         color: #FFC519;
         border: none;
         border-radius: 15px;
+        padding: 0 4px;
+        min-width: 0;
       }
 
       #workspaces button.active {
