@@ -24,9 +24,9 @@
           "custom/disks"
           "temperature"
           "battery"
-        ] ++ (if host != "desktop" then [ "custom/power-profile" ] else [])
-          ++ (if host == "ktop" || host == "laptop" then [ "custom/mirror" ] else []) ++ [
+        ] ++ (if host != "desktop" then [ "custom/power-profile" ] else []) ++ [
           "clock"
+        ] ++ (if host == "ktop" || host == "laptop" then [ "custom/mirror" ] else []) ++ [
           "custom/suspend"
           "custom/poweroff"
         ];
