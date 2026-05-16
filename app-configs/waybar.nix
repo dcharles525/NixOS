@@ -283,8 +283,9 @@
               touch "$STATE_FILE"
           fi
           sleep 1
-          pkill -x waybar
-          hyprctl dispatch exec waybar
+          pkill -x waybar || true
+          sleep 1
+          pgrep -x waybar || hyprctl dispatch exec waybar
       }
 
       get() {
