@@ -24,7 +24,8 @@
           "custom/disks"
           "temperature"
           "battery"
-        ] ++ (if host != "desktop" then [ "custom/power-profile" "custom/mirror" ] else []) ++ [
+        ] ++ (if host != "desktop" then [ "custom/power-profile" ] else [])
+          ++ (if host == "ktop" || host == "laptop" then [ "custom/mirror" ] else []) ++ [
           "clock"
           "custom/suspend"
           "custom/poweroff"
@@ -281,6 +282,9 @@
               hyprctl keyword monitor "HDMI-A-1,preferred,auto,1,mirror,eDP-1"
               touch "$STATE_FILE"
           fi
+          sleep 1
+          pkill -x waybar
+          hyprctl dispatch exec waybar
       }
 
       get() {
