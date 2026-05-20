@@ -5,7 +5,11 @@
     general = {
       lock_cmd = "pidof hyprlock || hyprlock";
       before_sleep_cmd = "pidof hyprlock || hyprlock";
-      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on; pidof hyprlock || (sleep 2; hyprlock &)";
+      # pidof check is not enough — TC1 link training kills hyprlock 3-5s after
+      # resume, after pidof already returned true. Unconditionally kill + respawn
+      # at t+6s; LockedHint guards against re-locking a session the user already
+      # unlocked before 6s elapsed.
+      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on; sleep 4; killall -q hyprlock; sleep 1; loginctl show-session $XDG_SESSION_ID -p LockedHint --value 2>/dev/null | grep -q yes && hyprlock &";
     };
     listener = [
       {
