@@ -1,5 +1,23 @@
 { specialArgs, ... }:
 {
+  home.file.".config/hypr/hyprlock-watchdog.sh" = {
+    executable = true;
+    text = ''
+      #!/usr/bin/env bash
+      # Respawns hyprlock if a monitoradded event kills it while the session is
+      # locked. Triggered by TC1 link training flicker on dock plug-in (same
+      # root cause as s2idle race, different trigger path).
+      hyprctl --wait events | while IFS= read -r line; do
+          [[ "$line" == *monitoradded* ]] || continue
+          sleep 3
+          pgrep -x hyprlock > /dev/null && continue
+          session=$(loginctl list-sessions --no-legend | awk '{print $1}' | head -1)
+          [ "$(loginctl show-session "$session" -p LockedHint --value 2>/dev/null)" = "yes" ] || continue
+          loginctl lock-session
+      done
+    '';
+  };
+
   wayland.windowManager.hyprland = {
     enable = true;
     extraConfig = ''
@@ -25,6 +43,8 @@
         workspace = 7, monitor:eDP-1
         workspace = 8, monitor:HDMI-A-1
         workspace = 9, monitor:DP-1
+
+        exec-once = ~/.config/hypr/hyprlock-watchdog.sh
       '' else ''
         monitor = eDP-1, 1920x1080@144, 0x0, 1
       ''}
