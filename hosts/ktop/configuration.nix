@@ -28,7 +28,6 @@
     PATH="$HOME/go/bin:$PATH";
   };
   environment.sessionVariables = {
-    NIXOS_OZONE_WL = "1";
     ADW_DISABLE_PORTAL = "1";
   };
   environment.shellAliases = {

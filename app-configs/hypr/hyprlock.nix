@@ -1,8 +1,22 @@
-{ ... }:
+{ pkgs, ... }:
 let
   background = builtins.path { path = ../../assets/background.jpg; name = "background.jpg"; };
 in
 {
+  systemd.user.services.hyprlock = {
+    Unit = {
+      Description = "Hyprlock screen locker";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.hyprlock}/bin/hyprlock";
+      Restart = "on-failure";
+      RestartSec = "1";
+    };
+  };
+
   programs.hyprlock = {
     enable = true;
     extraConfig = ''

@@ -21,6 +21,7 @@
   home.homeDirectory = "/home/d";
   home.sessionVariables = {
     EDITOR = "vim";
+    ELECTRON_OZONE_PLATFORM_HINT = "x11";
   };
   home.stateVersion = "24.11";
   home.sessionPath = [ "$HOME/.npm-packages/bin" ];
@@ -187,6 +188,19 @@
       text-color:       inherit;
     }
   '';
+
+  xdg.desktopEntries.slack = {
+    name = "Slack";
+    comment = "Slack Desktop";
+    genericName = "Slack Client for Linux";
+    exec = "slack --ozone-platform=x11 -s %U";
+    icon = "slack";
+    type = "Application";
+    startupNotify = true;
+    categories = [ "GNOME" "GTK" "Network" "InstantMessaging" ];
+    mimeType = [ "x-scheme-handler/slack" ];
+    settings.StartupWMClass = "Slack";
+  };
 
   xdg.desktopEntries."com.raspberrypi.rpi-imager" = {
     name = "Raspberry Pi Imager";

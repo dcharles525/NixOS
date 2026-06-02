@@ -3,9 +3,9 @@
   services.hypridle.enable = true;
   services.hypridle.settings = {
     general = {
-      lock_cmd = "pidof hyprlock || hyprlock";
-      before_sleep_cmd = "pidof hyprlock || hyprlock";
-      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on; pidof hyprlock || (sleep 2; hyprlock &)";
+      lock_cmd = "systemctl --user start hyprlock";
+      before_sleep_cmd = "systemctl --user start hyprlock";
+      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on";
     };
     listener = [
       {
@@ -27,7 +27,7 @@
       {
         timeout = 1800;
         # Skip dpms off if hyprlock is already running — dpms off while locked causes
-        # topology changes that crash hyprlock or leave displays unrecoverable on NVIDIA.
+        # topology changes that crash the locker or leave displays unrecoverable on NVIDIA.
         # (see: hyprwm/hyprlock#953 comment by @eliasnema)
         on-timeout = "pgrep -x hyprlock || hyprctl dispatch dpms off";
         on-resume = "hyprctl dispatch dpms on && brightnessctl -r";
