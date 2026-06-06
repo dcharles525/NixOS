@@ -1,0 +1,150 @@
+diff --git a/src/core/LockSurface.cpp b/src/core/LockSurface.cpp
+index a245575..7754c70 100644
+--- a/src/core/LockSurface.cpp
++++ b/src/core/LockSurface.cpp
+@@ -6,7 +6,25 @@
+ #include "../helpers/Log.hpp"
+ #include "../renderer/Renderer.hpp"
+ 
++// Surfaces moved here when their output is removed before they can be destroyed
++// cleanly. Kept alive to prevent the SP destructor from sending
++// ext_session_lock_surface_v1_destroy on an already-dead server-side object,
++// which would cause a fatal Wayland protocol error that crashes both hyprlock
++// and Hyprland.
++//
++// Intentionally heap-allocated and never freed: the static destructor runs
++// after wl_display_disconnect(), so any SP destructor that tries to send a
++// Wayland request at that point would crash in proxy_destroy (null display
++// map). Leaking the allocation is safe -- the OS reclaims it at process exit
++// and the display connection handles proxy cleanup on its own.
++static std::vector<SP<CCExtSessionLockSurfaceV1>>& s_orphanedSurfaces =
++    *new std::vector<SP<CCExtSessionLockSurfaceV1>>();
++
+ CSessionLockSurface::~CSessionLockSurface() {
++    // Signal any in-flight Wayland callbacks that this object is gone.
++    if (m_alive)
++        *m_alive = false;
++
+     if (frameCallback)
+         frameCallback.reset();
+ 
+@@ -21,6 +39,8 @@ CSessionLockSurface::CSessionLockSurface(const SP<COutput>& pOutput) :
+     m_outputRef(pOutput), m_outputID(pOutput->m_ID), surface(makeShared<CCWlSurface>(g_pHyprlock->getCompositor()->sendCreateSurface())) {
+     RASSERT(surface, "Couldn't create wl_surface");
+ 
++    m_alive = makeShared<bool>(true);
++
+     static const auto FRACTIONALSCALING = g_pConfigManager->getValue<Hyprlang::INT>("general:fractional_scaling");
+     const auto        ENABLE_FSV1       = *FRACTIONALSCALING == 1 || /* auto enable */ (*FRACTIONALSCALING == 2);
+     const auto        PFRACTIONALMGR    = g_pHyprlock->getFractionalMgr();
+@@ -50,7 +70,15 @@ CSessionLockSurface::CSessionLockSurface(const SP<COutput>& pOutput) :
+     lockSurface = makeShared<CCExtSessionLockSurfaceV1>(g_pHyprlock->getSessionLock()->sendGetLockSurface(surface->resource(), pOutput->m_wlOutput->resource()));
+     RASSERT(lockSurface, "Couldn't create ext_session_lock_surface_v1");
+ 
+-    lockSurface->setConfigure([this](CCExtSessionLockSurfaceV1* r, uint32_t serial, uint32_t width, uint32_t height) { configure({(double)width, (double)height}, serial); });
++    WP<bool> aliveWeak = m_alive;
++    lockSurface->setConfigure([this, aliveWeak](CCExtSessionLockSurfaceV1* r, uint32_t serial, uint32_t width, uint32_t height) {
++        // If the surface was destroyed (output removed) before this queued
++        // configure event fired, do not touch any freed Wayland objects.
++        const auto alive = aliveWeak.lock();
++        if (!alive || !*alive)
++            return;
++        configure({(double)width, (double)height}, serial);
++    });
+ }
+ 
+ void CSessionLockSurface::configure(const Vector2D& size_, uint32_t serial_) {
+@@ -62,6 +90,17 @@ void CSessionLockSurface::configure(const Vector2D& size_, uint32_t serial_) {
+ 
+     const auto POUTPUT = m_outputRef.lock();
+ 
++    // The backing output is being torn down (e.g. TC1/Thunderbolt link-training
++    // flicker removed the wl_output). Hyprland has already destroyed the
++    // server-side ext_session_lock_surface, so acking this configure would
++    // reference a dead object and produce a fatal "invalid object" protocol
++    // error, taking the whole session down. Drop the late configure instead.
++    if (!POUTPUT) {
++        Log::logger->log(Log::WARN, "configure for output {} whose wl_output is gone, ignoring", m_outputID);
++        readyForFrame = false;
++        return;
++    }
++
+     serial       = serial_;
+     logicalSize  = size_;
+     appliedScale = fractionalScale;
+@@ -128,6 +167,18 @@ void CSessionLockSurface::configure(const Vector2D& size_, uint32_t serial_) {
+     render();
+ }
+ 
++void CSessionLockSurface::orphan() {
++    if (!lockSurface)
++        return;
++    // The compositor has already destroyed the server-side ext_session_lock_surface
++    // (it does so when the wl_output is removed). Sending the protocol destroy request
++    // on the now-dead object produces "wl_display error: invalid object N", which the
++    // compositor handles by crashing with EDEADLK. Move the SP into a static graveyard
++    // so its destructor never runs during this session, preventing the bad request.
++    s_orphanedSurfaces.push_back(std::move(lockSurface));
++    // lockSurface is now null; ~CSessionLockSurface will do nothing with it.
++}
++
+ void CSessionLockSurface::onScaleUpdate() {
+     configure(logicalSize, serial);
+ }
+diff --git a/src/core/LockSurface.hpp b/src/core/LockSurface.hpp
+index fdbac6b..8dc3226 100644
+--- a/src/core/LockSurface.hpp
++++ b/src/core/LockSurface.hpp
+@@ -18,6 +18,7 @@ class CSessionLockSurface {
+     ~CSessionLockSurface();
+ 
+     void            configure(const Vector2D& size, uint32_t serial);
++    void            orphan();
+ 
+     bool            readyForFrame = false;
+ 
+@@ -48,6 +49,9 @@ class CSessionLockSurface {
+     uint32_t                      m_lastFrameTime = 0;
+     uint32_t                      m_frames        = 0;
+ 
++    // Sentinel used to detect destruction inside in-flight Wayland event callbacks.
++    SP<bool>                      m_alive;
++
+     // wayland callbacks
+     SP<CCWlCallback> frameCallback = nullptr;
+ 
+diff --git a/src/core/hyprlock.cpp b/src/core/hyprlock.cpp
+index 9a66eea..7cd0eb2 100644
+--- a/src/core/hyprlock.cpp
++++ b/src/core/hyprlock.cpp
+@@ -334,6 +334,13 @@ void CHyprlock::run() {
+         Log::logger->log(Log::INFO, "  | removed iface {}", name);
+         auto outputIt = std::ranges::find_if(m_vOutputs, [id = name](const auto& other) { return other->m_ID == id; });
+         if (outputIt != m_vOutputs.end()) {
++            // Orphan the lock surface BEFORE destroying the COutput. The compositor
++            // already destroyed the server-side ext_session_lock_surface when it
++            // removed the wl_output (TC1/Thunderbolt link-training flicker).
++            // Sending ext_session_lock_surface_v1_destroy on a dead object causes
++            // a fatal "invalid object" protocol error that crashes Hyprland (EDEADLK).
++            if ((*outputIt)->m_sessionLockSurface)
++                (*outputIt)->m_sessionLockSurface->orphan();
+             g_pRenderer->removeWidgetsFor((*outputIt)->m_ID);
+             m_vOutputs.erase(outputIt);
+         }
+@@ -411,7 +418,15 @@ void CHyprlock::run() {
+                 }
+ 
+                 for (size_t i = 0; i < fdcount; ++i) {
+-                    RASSERT(!(pollfds[i].revents & POLLHUP), "[core] Disconnected from pollfd id {}", i);
++                    if (pollfds[i].revents & POLLHUP) {
++                        // The Wayland compositor closed the connection (likely due to a
++                        // protocol error). Exit immediately so systemd can restart us;
++                        // ext-session-lock-v1 guarantees the screen stays locked until
++                        // unlock_and_destroy is explicitly called.
++                        Log::logger->log(Log::CRIT, "[core] Disconnected from pollfd id {}, exiting for restart", i);
++                        wl_display_cancel_read(m_sWaylandState.display);
++                        _exit(1);
++                    }
+                 }
+ 
+                 wl_display_read_events(m_sWaylandState.display);

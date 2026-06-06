@@ -1,0 +1,30 @@
+diff --git a/src/protocols/SessionLock.cpp b/src/protocols/SessionLock.cpp
+index de2b96f..1c5deed 100644
+--- a/src/protocols/SessionLock.cpp
++++ b/src/protocols/SessionLock.cpp
+@@ -55,6 +55,10 @@ CSessionLockSurface::CSessionLockSurface(SP<CExtSessionLockSurfaceV1> resource_,
+             Desktop::focusState()->surface().reset();
+ 
+         m_surface.reset();
++        // Propagate so SSessionLockSurface removes itself from vSessionLockSurfaces.
++        // Without this, the stale entry remains and renderSessionLockSurface will
++        // crash when the monitor reconnects (null surface dereference in breadthfirst).
++        m_events.destroy.emit();
+     });
+ 
+     if (m_monitor) {
+diff --git a/src/render/Renderer.cpp b/src/render/Renderer.cpp
+index 2713d45..7cf2a32 100644
+--- a/src/render/Renderer.cpp
++++ b/src/render/Renderer.cpp
+@@ -1092,6 +1092,10 @@ void IHyprRenderer::renderSessionLockSurface(WP<SSessionLockSurface> pSurface, P
+ 
+     renderdata.blur     = false;
+     renderdata.surface  = pSurface->surface->surface();
++    // Guard: wl_surface may have been destroyed (monitor removed during session lock)
++    // while the SSessionLockSurface entry lingers in vSessionLockSurfaces.
++    if (!renderdata.surface)
++        return;
+     renderdata.decorate = false;
+     renderdata.w        = pMonitor->m_size.x;
+     renderdata.h        = pMonitor->m_size.y;

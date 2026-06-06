@@ -1,5 +1,11 @@
 { config, pkgs, lib, inputs, ... }:
 
+let
+  hyprland-pkg = (inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland).overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ../../app-configs/hypr/hyprland-tc1.patch ];
+  });
+in
+
 {
   #
   # Config Setup
@@ -65,6 +71,10 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelParams = [ "systemd.unified_cgroup_hierarchy=1" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
+  # Disable PSR and display C-states to reduce TC1 link training flicker
+  # on USB-C/Thunderbolt port. TC1 briefly removes wl_output on plug-in
+  # which crashes hyprlock — these reduce the retraining trigger frequency.
+  boot.extraModprobeConfig = "options i915 enable_psr=0 enable_dc=0 enable_dp_mst=0";
 
   # User Setup
 
@@ -159,7 +169,7 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    package = hyprland-pkg;
     portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
