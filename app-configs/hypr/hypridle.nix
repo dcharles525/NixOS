@@ -4,6 +4,9 @@
   services.hypridle.settings = {
     general = {
       lock_cmd = "pidof hyprlock || hyprlock";
+      # s2idle freezes processes in place so hyprlock survives sleep fine.
+      # Keeping it alive means dpms-on on wake only resizes surfaces (safe) rather than
+      # triggering a full output disconnect/reconnect that crashes a freshly-started hyprlock.
       before_sleep_cmd = "pidof hyprlock || hyprlock";
       after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on; pidof hyprlock || (sleep 2; hyprlock &)";
     };
