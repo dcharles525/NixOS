@@ -1,7 +1,13 @@
-{ specialArgs, ... }:
+{ specialArgs, pkgs, ... }:
+let
+  hyprland-pkg = (specialArgs.inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland).overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./hyprland-tc1.patch ];
+  });
+in
 {
   wayland.windowManager.hyprland = {
     enable = true;
+    package = hyprland-pkg;
     extraConfig = ''
       ${if specialArgs.host == "desktop" then ''
         monitor = DP-1, 2560x1440@60, 0x0, 1
@@ -109,8 +115,7 @@
       }
 
       dwindle {
-        pseudotile = true
-        preserve_split = true # You probably want this
+        preserve_split = true
       }
 
       master {
@@ -159,8 +164,7 @@
       bind = $mainMod, V, togglefloating,
       bind = $mainMod, R, exec, $menu
       bind = $mainMod, P, pseudo, # dwindle
-      bind = $mainMod, J, togglesplit, # dwindle
-      bind = $mainMod, L, exec, hyprlock
+      bind = $mainMod, L, exec, systemctl --user start hyprlock
       bind = $mainMod, N, exec, iwmenu -l rofi
 
       bind = $mainMod, left, movefocus, l

@@ -1,14 +1,35 @@
-{ ... }:
+{ pkgs, specialArgs, ... }:
 let
   background = builtins.path { path = ../../assets/background.jpg; name = "background.jpg"; };
+  # hyprlock from flake (commit b31b269) patched to survive TC1/Thunderbolt
+  # link-training output removal during an active session lock. See
+  # hyprlock-tc1.patch for the full rationale.
+  hyprlock-pkg = (specialArgs.inputs.hyprlock.packages.${pkgs.stdenv.hostPlatform.system}.hyprlock).overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./hyprlock-tc1.patch ];
+  });
 in
 {
+  systemd.user.services.hyprlock = {
+    Unit = {
+      Description = "Hyprlock screen locker";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${hyprlock-pkg}/bin/hyprlock";
+      Restart = "on-failure";
+      RestartSec = "5";
+    };
+  };
+
   programs.hyprlock = {
+    package = hyprlock-pkg;
     enable = true;
     extraConfig = ''
       # GENERAL
       general {
-          hide_cursor = true
+          hide_cursor = ${if specialArgs.host == "desktop" then "true" else "false"}
           ignore_empty_input = true
       }
 

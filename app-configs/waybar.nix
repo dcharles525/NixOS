@@ -97,6 +97,8 @@
             format = " {temperatureF}°F";
         };
         "battery" = {
+            bat = "BAT0";
+            adapter = "AC";
             states = {
               warning = 30;
               critical = 15;
@@ -116,7 +118,7 @@
         "custom/suspend" = {
           format = "⏾";
           tooltip-format = "Sleeply Time";
-          on-click = "loginctl lock-session; sleep 1; systemctl suspend";
+          on-click = "loginctl lock-session && sleep 1 && systemctl suspend";
         };
         "custom/poweroff" = {
           format = "⏻ ";

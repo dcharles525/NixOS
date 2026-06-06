@@ -3,12 +3,13 @@
   services.hypridle.enable = true;
   services.hypridle.settings = {
     general = {
-      lock_cmd = "pidof hyprlock || hyprlock";
+      lock_cmd = "systemctl --user start hyprlock";
       # s2idle freezes processes in place so hyprlock survives sleep fine.
       # Keeping it alive means dpms-on on wake only resizes surfaces (safe) rather than
       # triggering a full output disconnect/reconnect that crashes a freshly-started hyprlock.
-      before_sleep_cmd = "pidof hyprlock || hyprlock";
-      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on; pidof hyprlock || (sleep 2; hyprlock &)";
+      # systemctl start is idempotent; Restart=on-failure in the hyprlock service handles respawn.
+      before_sleep_cmd = "systemctl --user start hyprlock";
+      after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on";
     };
     listener = [
       {
@@ -30,7 +31,7 @@
       {
         timeout = 1800;
         # Skip dpms off if hyprlock is already running — dpms off while locked causes
-        # topology changes that crash hyprlock or leave displays unrecoverable on NVIDIA.
+        # topology changes that crash the locker or leave displays unrecoverable on NVIDIA.
         # (see: hyprwm/hyprlock#953 comment by @eliasnema)
         on-timeout = "pgrep -x hyprlock || hyprctl dispatch dpms off";
         on-resume = "hyprctl dispatch dpms on && brightnessctl -r";
