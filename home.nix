@@ -26,6 +26,17 @@
   home.stateVersion = "24.11";
   home.sessionPath = [ "$HOME/.npm-packages/bin" ];
 
+  programs.weathr = {
+    enable = true;
+    settings = {
+      units = {
+        temperature = "fahrenheit";
+        wind_speed = "mph";
+        precipitation = "inch";
+      };
+    };
+  };
+
   home.file.".config/rofi/config.rasi".text = ''
     * {
       highlight: bold italic;

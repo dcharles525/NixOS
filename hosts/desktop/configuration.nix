@@ -94,6 +94,7 @@
   home-manager = {
     backupFileExtension = "backup";
     extraSpecialArgs = { inherit inputs; host="desktop";};
+    sharedModules = [ inputs.weathr.homeModules.weathr ];
     users = {
       "d" = import ./../../home.nix;
     };
@@ -257,6 +258,7 @@
       requests
       numpy
       flask
+      pytest
     ]))
     iotop
     sysstat
