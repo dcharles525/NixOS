@@ -24,7 +24,10 @@
     ELECTRON_OZONE_PLATFORM_HINT = "x11";
   };
   home.stateVersion = "24.11";
-  home.sessionPath = [ "$HOME/.npm-packages/bin" ];
+  home.sessionPath = [ 
+    "$HOME/.npm-packages/bin"
+    "$HOME/.local/bin"
+  ];
 
   home.file.".config/rofi/config.rasi".text = ''
     * {

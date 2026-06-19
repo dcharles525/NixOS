@@ -3,6 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # Newer unstable used only for selected packages (tailscale)
+    nixpkgs-latest.url = "github:nixos/nixpkgs/nixos-unstable";
     nix-flatpak.url = "github:gmodena/nix-flatpak";
     iwmenu.url = "github:e-tho/iwmenu";
     home-manager = {
@@ -19,7 +21,16 @@
     };
   };
 
-  outputs = { self, nixpkgs, ... }@inputs: {
+  outputs = { self, nixpkgs, ... }@inputs:
+  let
+    latestPackagesOverlay = { pkgs, ... }: {
+      nixpkgs.overlays = [
+        (final: prev: {
+          tailscale = inputs.nixpkgs-latest.legacyPackages.${prev.stdenv.hostPlatform.system}.tailscale;
+        })
+      ];
+    };
+  in {
     # use "nixos", or your hostname as the name of the configuration
     # it's a better practice than "default" shown in the video
     nixosConfigurations = {
@@ -29,6 +40,7 @@
           ./hosts/desktop/configuration.nix
           inputs.home-manager.nixosModules.default
           inputs.nix-flatpak.nixosModules.nix-flatpak
+          latestPackagesOverlay
         ];
       };
       laptop = nixpkgs.lib.nixosSystem {
@@ -36,6 +48,7 @@
         modules = [
           ./hosts/laptop/configuration.nix
           inputs.home-manager.nixosModules.default
+          latestPackagesOverlay
         ];
       };
       ktop = nixpkgs.lib.nixosSystem {
@@ -43,6 +56,7 @@
         modules = [
           ./hosts/ktop/configuration.nix
           inputs.home-manager.nixosModules.default
+          latestPackagesOverlay
         ];
       };
     };

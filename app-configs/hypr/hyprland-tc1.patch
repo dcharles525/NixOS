@@ -1,5 +1,38 @@
+diff --git a/src/managers/ProtocolManager.cpp b/src/managers/ProtocolManager.cpp
+index d77d1b0a..40671d08 100644
+--- a/src/managers/ProtocolManager.cpp
++++ b/src/managers/ProtocolManager.cpp
+@@ -95,8 +95,11 @@ void CProtocolManager::onMonitorModeChange(PHLMONITOR pMonitor) {
+     if (ISMIRROR && PROTO::outputs.contains(pMonitor->m_name))
+         PROTO::outputs.at(pMonitor->m_name)->remove();
+     else if (!ISMIRROR && (!PROTO::outputs.contains(pMonitor->m_name) || PROTO::outputs.at(pMonitor->m_name)->isDefunct())) {
+-        if (PROTO::outputs.contains(pMonitor->m_name))
++        if (PROTO::outputs.contains(pMonitor->m_name)) {
++            // Defer destroying the old global: clients may have binds in flight.
++            retireWLOutputGlobal(PROTO::outputs.at(pMonitor->m_name));
+             PROTO::outputs.erase(pMonitor->m_name);
++        }
+         auto p = PROTO::outputs.emplace(pMonitor->m_name,
+                                         makeShared<CWLOutputProtocol>(&wl_output_interface, 4, std::format("WLOutput ({})", pMonitor->m_name), pMonitor->m_self.lock()));
+         p.first->second->m_self = p.first->second;
+@@ -123,8 +126,14 @@ CProtocolManager::CProtocolManager() {
+         if (M->isMirror() || M == g_pCompositor->m_unsafeOutput)
+             return;
+ 
+-        if (PROTO::outputs.contains(M->m_name))
++        if (PROTO::outputs.contains(M->m_name)) {
++            // Monitor replug (e.g. TC1/Thunderbolt link retraining) replaces the
++            // global under the same name. Defer destroying the old one: clients
++            // that saw it advertised may have wl_registry.bind requests in flight,
++            // and wl_global_destroy would kill them with "invalid global".
++            retireWLOutputGlobal(PROTO::outputs.at(M->m_name));
+             PROTO::outputs.erase(M->m_name);
++        }
+ 
+         auto ref = makeShared<CWLOutputProtocol>(&wl_output_interface, 4, std::format("WLOutput ({})", M->m_name), M->m_self.lock());
+         PROTO::outputs.emplace(M->m_name, ref);
 diff --git a/src/protocols/SessionLock.cpp b/src/protocols/SessionLock.cpp
-index de2b96f..1c5deed 100644
+index de2b96f2..1c5deed2 100644
 --- a/src/protocols/SessionLock.cpp
 +++ b/src/protocols/SessionLock.cpp
 @@ -55,6 +55,10 @@ CSessionLockSurface::CSessionLockSurface(SP<CExtSessionLockSurfaceV1> resource_,
@@ -13,11 +46,85 @@ index de2b96f..1c5deed 100644
      });
  
      if (m_monitor) {
+diff --git a/src/protocols/core/Output.cpp b/src/protocols/core/Output.cpp
+index 9278eb95..858febb4 100644
+--- a/src/protocols/core/Output.cpp
++++ b/src/protocols/core/Output.cpp
+@@ -2,6 +2,40 @@
+ #include "Compositor.hpp"
+ #include "../../Compositor.hpp"
+ #include "../../helpers/Monitor.hpp"
++#include "../../managers/eventLoop/EventLoopManager.hpp"
++
++struct SRetiredOutputGlobal {
++    SP<CWLOutputProtocol> proto;
++    SP<CEventLoopTimer>   timer;
++};
++
++// Holds removed-but-not-yet-destroyed wl_output globals so that clients with
++// in-flight wl_registry.bind requests are not killed by an "invalid global"
++// protocol error. Intentionally heap-allocated and never freed: the entries may
++// still hold Wayland globals at exit, and a static destructor would destroy
++// them after the wl_display is gone.
++static std::vector<SP<SRetiredOutputGlobal>>& s_retiredOutputGlobals = *new std::vector<SP<SRetiredOutputGlobal>>();
++
++void retireWLOutputGlobal(SP<CWLOutputProtocol> proto) {
++    if (!proto)
++        return;
++
++    if (!proto->isDefunct())
++        proto->remove();
++
++    auto entry   = makeShared<SRetiredOutputGlobal>();
++    entry->proto = proto;
++    // The grace period only needs to cover a client round-trip; 10s is generous.
++    entry->timer = makeShared<CEventLoopTimer>(
++        std::chrono::seconds(10),
++        [raw = entry.get()](SP<CEventLoopTimer> self, void*) {
++            std::erase_if(s_retiredOutputGlobals, [&](const auto& e) { return e.get() == raw; });
++        },
++        nullptr);
++
++    s_retiredOutputGlobals.emplace_back(entry);
++    g_pEventLoopManager->addTimer(entry->timer);
++}
+ 
+ CWLOutputResource::CWLOutputResource(SP<CWlOutput> resource_, PHLMONITOR pMonitor) : m_monitor(pMonitor), m_resource(resource_) {
+     if UNLIKELY (!good())
+@@ -115,8 +149,12 @@ void CWLOutputProtocol::bindManager(wl_client* client, void* data, uint32_t ver,
+ void CWLOutputProtocol::destroyResource(CWLOutputResource* resource) {
+     std::erase_if(m_outputs, [&](const auto& other) { return other.get() == resource; });
+ 
+-    if (m_outputs.empty() && m_defunct)
++    // Only retire the map entry if it is still this protocol object: a monitor
++    // replug may have already replaced it with a fresh global under the same name.
++    if (m_outputs.empty() && m_defunct && PROTO::outputs.contains(m_name) && PROTO::outputs.at(m_name).get() == this) {
++        retireWLOutputGlobal(PROTO::outputs.at(m_name));
+         PROTO::outputs.erase(m_name);
++    }
+ }
+ 
+ std::vector<SP<CWLOutputResource>> CWLOutputProtocol::outputResourcesFrom(wl_client* client) {
+diff --git a/src/protocols/core/Output.hpp b/src/protocols/core/Output.hpp
+index cf266685..c55c33bf 100644
+--- a/src/protocols/core/Output.hpp
++++ b/src/protocols/core/Output.hpp
+@@ -68,3 +68,10 @@ class CWLOutputProtocol : public IWaylandProtocol {
+ namespace PROTO {
+     inline std::unordered_map<std::string, SP<CWLOutputProtocol>> outputs;
+ };
++
++// Defers the destruction of a removed wl_output global. Destroying the global
++// while a client's wl_registry.bind for it is still in flight kills that client
++// with a fatal "invalid global" protocol error; wl_global_remove alone is safe
++// (binds to a zombie global still succeed), so the global is kept as a zombie
++// for a grace period before being destroyed.
++void retireWLOutputGlobal(SP<CWLOutputProtocol> proto);
 diff --git a/src/render/Renderer.cpp b/src/render/Renderer.cpp
-index 2713d45..7cf2a32 100644
+index 31579342..bc5f769e 100644
 --- a/src/render/Renderer.cpp
 +++ b/src/render/Renderer.cpp
-@@ -1092,6 +1092,10 @@ void IHyprRenderer::renderSessionLockSurface(WP<SSessionLockSurface> pSurface, P
+@@ -1040,6 +1040,10 @@ void IHyprRenderer::renderSessionLockSurface(WP<SSessionLockSurface> pSurface, P
  
      renderdata.blur     = false;
      renderdata.surface  = pSurface->surface->surface();
