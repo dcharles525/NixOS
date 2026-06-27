@@ -38,7 +38,14 @@
       }
       {
         timeout = 2700;
-        on-timeout = "systemctl suspend";
+        # Desktop uses suspend-then-hibernate: fast s2idle for short cycles, auto-promotes
+        # to S4 after HibernateDelaySec (configured in hosts/desktop/configuration.nix)
+        # so overnight wakes via clean GPU cold-start instead of dead modeset.
+        # ktop stays on plain suspend — its swap is LUKS-encrypted and hibernate needs
+        # separate initrd plumbing not in scope here.
+        on-timeout = if specialArgs.host == "desktop"
+          then "systemctl suspend-then-hibernate"
+          else "systemctl suspend";
       }
     ];
   };

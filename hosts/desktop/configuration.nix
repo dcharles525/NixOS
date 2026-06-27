@@ -82,7 +82,17 @@
     "nvidia_drm.modeset=1"
     # S3 hard-freezes on NVIDIA resume (confirmed twice). s2idle survives cleanly.
     "mem_sleep_default=s2idle"
+    # Long s2idle (>several hours) loses VRAM self-refresh on NVIDIA → modeset
+    # can't recover → black displays on wake. Route the kernel at swap so
+    # suspend-then-hibernate can promote to S4 after HibernateDelaySec.
+    "resume=UUID=2271fa51-737a-4ac4-b435-3c6aace266a0"
   ];
+
+  # Auto-promote s2idle → hibernate after 1h idle in suspend.
+  # Short sleeps stay fast (s2idle), overnight gets a clean GPU cold-start via S4.
+  systemd.sleep.extraConfig = ''
+    HibernateDelaySec=1h
+  '';
 
   # User Setup
 
