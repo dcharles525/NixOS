@@ -81,7 +81,7 @@ in
   users.users.d = {
     isNormalUser = true;
     description = "David Johnson";
-    extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" "disk" ];
   };
   home-manager = {
     useGlobalPkgs = true;
@@ -263,6 +263,7 @@ in
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0660", GROUP="adbusers"
     SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0660", GROUP="adbusers"
+    SUBSYSTEM=="block", ATTRS{removable}=="1", MODE="0660", GROUP="disk"
   '';
 
   nixpkgs.overlays = [
