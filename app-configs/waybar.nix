@@ -25,6 +25,7 @@
           "temperature"
           "battery"
         ] ++ (if host != "desktop" then [ "custom/power-profile" ] else []) ++ [
+          "custom/claude"
           "clock"
         ] ++ (if host == "ktop" || host == "laptop" then [ "custom/mirror" ] else []) ++ [
           "custom/suspend"
@@ -151,6 +152,13 @@
           tooltip = true;
           tooltip-format = "Toggle HDMI mirror mode";
         };
+        "custom/claude" = {
+          exec = "${config.home.homeDirectory}/NixOS/scripts/claude-usage.sh";
+          return-type = "json";
+          interval = 30;
+          format = "{}";
+          tooltip = true;
+        };
       } // (if host == "desktop" then {
         "custom/gpu" = {
           format = "󰘚  {}";
@@ -218,6 +226,7 @@
       #custom-disks,
       #custom-gpu,
       #custom-mirror,
+      #custom-claude,
       #mpd {
         padding: 2px 10px;
         border-radius: 15px;
@@ -246,8 +255,13 @@
       #custom-disks:hover,
       #custom-gpu:hover,
       #custom-mirror:hover,
+      #custom-claude:hover,
       #mpd:hover {
         background: rgba(255, 255, 255, 0.08);
+      }
+
+      #custom-claude.stale {
+        opacity: 0.45;
       }
 
       #workspaces button {

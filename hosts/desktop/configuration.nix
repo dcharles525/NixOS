@@ -261,6 +261,8 @@
     iotop
     sysstat
     claude-code
+    lazygit
+    gh
 
     # Computer Environment
     waybar

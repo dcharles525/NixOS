@@ -355,6 +355,7 @@ in
     openshift
     argocd
     lazygit
+    gh
 
     # Clipboard
     wl-clipboard
