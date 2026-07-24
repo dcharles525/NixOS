@@ -9,6 +9,7 @@
     ./app-configs/waybar.nix
     ./app-configs/ghostty.nix
     ./app-configs/dunst.nix
+    ./app-configs/claude.nix
   ];
 
   #
