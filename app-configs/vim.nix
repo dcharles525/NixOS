@@ -3,12 +3,13 @@
   environment.variables = { EDITOR = "vim"; };
 
   environment.systemPackages = with pkgs; [
+    zls
     ((vim-full.override {  }).customize{
       name = "vim";
       # Install plugins for example for syntax highlighting of nix files
       vimrcConfig.packages.myplugins = with pkgs.vimPlugins; {
         start = [ nerdtree vim-go vim-nix vim-lastplace vim-airline gruvbox ale editorconfig-vim
-          vim-indent-guides copilot-vim
+          vim-indent-guides copilot-vim zig-vim
           (pkgs.vimUtils.buildVimPlugin {
             name = "vim-ai";
             src = pkgs.fetchFromGitHub {
@@ -57,6 +58,7 @@
           \'javascript': ['eslint'],
           \'python': ['flake8', 'pylint'],
           \'typescript': ['eslint'],
+          \'zig': ['zls'],
         \}
 
         packloadall

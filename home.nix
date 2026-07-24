@@ -258,4 +258,40 @@
       name = "catppuccin-mocha-dark-cursors";
     };
   };
+
+  xdg.configFile."opencode/config.json".text = builtins.toJSON {
+    "$schema" = "https://opencode.ai/config.json";
+    permission = {
+      "webfetch" = "allow";
+      "bash" = "allow";
+      "read" = "allow";
+      "edit" = "allow";
+      "skill" = "allow";
+    };
+    model = "ollama/llama3.1-16k:latest";
+    provider = {
+      ollama = {
+        npm = "@ai-sdk/openai-compatible";
+        name = "Ollama (local)";
+        options = {
+          baseURL = "http://localhost:11434/v1/";
+        };
+        models = {
+          "qwen2.5-coder:1.5b" = { 
+            name = "Qwen 2.5 Coder 1.5B"; 
+            "reasoning" = true;
+            "tool_call" = true;
+            "limit" = {
+              "context" = 131072;
+              "output" = 65536;
+            };
+          };
+          "qwen2.5-coder-32k:latest" = { name = "Qwen 2.5 Coder 7B (32k ctx)"; "tool_call" = true; };
+          "llama3.1:latest" = { name = "Llama 3.1 8B"; "tool_call" = true; };
+          "llama3.1-16k:latest" = { name = "Llama 3.1 8B (16k ctx)"; "tool_call" = true; };
+          "qwen3:8b" = { name = "Qwen 8B"; };
+        };
+      };
+    };
+  };
 }

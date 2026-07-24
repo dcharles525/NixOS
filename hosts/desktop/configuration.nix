@@ -1,5 +1,9 @@
 { config, pkgs, lib, inputs, ... }:
-
+let
+  hyprland-pkg = (inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland).overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ../../app-configs/hypr/hyprland-tc1.patch ];
+  });
+in
 {
   #
   # Config Setup
@@ -90,9 +94,9 @@
 
   # Auto-promote s2idle → hibernate after 1h idle in suspend.
   # Short sleeps stay fast (s2idle), overnight gets a clean GPU cold-start via S4.
-  systemd.sleep.extraConfig = ''
-    HibernateDelaySec=1h
-  '';
+  systemd.sleep.settings.Sleep = {
+    HibernateDelaySec = "1h";
+  };
 
   # User Setup
 
@@ -199,7 +203,7 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    package = hyprland-pkg;
     portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
@@ -239,6 +243,7 @@
     android-tools
     vim-full
     go
+    zig
     protobuf
     openssl
     git
@@ -298,6 +303,7 @@
     pulseaudio
     iw
     lemonbar
+    opencode
 
     # Misc Apps
     gparted
@@ -339,6 +345,7 @@
   services.tailscale.enable = true;
   programs.vim.enable = true;
   programs.firefox.enable = true;
+  # programs.opencode.settings = {}; # module not in current nixpkgs-unstable yet; re-enable after nix flake update nixpkgs
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
