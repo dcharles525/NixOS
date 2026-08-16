@@ -10,6 +10,7 @@
     ./app-configs/ghostty.nix
     ./app-configs/dunst.nix
     ./app-configs/claude.nix
+    ./app-configs/bash.nix
   ];
 
   #
@@ -17,7 +18,6 @@
   #
 
   programs.home-manager.enable = true;
-  programs.bash.enable = true;
   home.username = "d";
   home.homeDirectory = "/home/d";
   home.sessionVariables = {
@@ -291,7 +291,21 @@
           "llama3.1:latest" = { name = "Llama 3.1 8B"; "tool_call" = true; };
           "llama3.1-16k:latest" = { name = "Llama 3.1 8B (16k ctx)"; "tool_call" = true; };
           "qwen3:8b" = { name = "Qwen 8B"; };
+          "gemma4:e4b" = { name = "Gemma 4 E4B (4.5B)"; "tool_call" = true; };
+          "gemma4:e4b-32k" = { name = "Gemma 4 E4B (4.5B) 32k"; "tool_call" = true; };
         };
+      };
+    };
+    mcp = {
+      excalidraw = {
+        type = "local";
+        enabled = true;
+        command = [
+          "docker" "run" "-i" "--rm"
+          "-e" "EXPRESS_SERVER_URL=http://beelink:5001"
+          "-e" "ENABLE_CANVAS_SYNC=true"
+          "ghcr.io/yctimlin/mcp_excalidraw:latest"
+        ];
       };
     };
   };

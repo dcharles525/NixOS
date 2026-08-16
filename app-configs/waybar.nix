@@ -16,6 +16,7 @@
         ];
         modules-right = [
           "pulseaudio"
+          "custom/mic"
           "network"
           "bluetooth"
           "cpu"
@@ -46,11 +47,9 @@
         
         "pulseaudio" = {
           format = "{icon}  {volume}%";
-          format-bluetooth = "{icon} {volume}%  {format_source}";
-          format-bluetooth-muted = " {icon} {format_source}";
-          format-muted = " {format_source}";
-          format-source = " {volume}%";
-          format-source-muted = "";
+          format-bluetooth = "{icon} {volume}%";
+          format-muted = "  Muted";
+          format-bluetooth-muted = "  Muted";
           format-icons = {
             headphone = "";
             hands-free = "";
@@ -60,7 +59,19 @@
             car = "";
             default = ["" "" ""];
           };
-          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-sound-picker.sh";
+          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-sound-picker.sh sink";
+          on-click-middle = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
+        };
+
+        "custom/mic" = {
+          exec = "${config.home.homeDirectory}/NixOS/scripts/mic-status.sh";
+          interval = 2;
+          format = "{}";
+          tooltip = false;
+          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-sound-picker.sh source";
+          on-click-middle = "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
+          on-scroll-up = "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%+ -l 1.5";
+          on-scroll-down = "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-";
         };
 
         "network" = {
@@ -213,6 +224,7 @@
       #network,
       #bluetooth,
       #pulseaudio,
+      #custom-mic,
       #wireplumber,
       #custom-media,
       #tray,
@@ -242,6 +254,7 @@
       #backlight:hover,
       #network:hover,
       #pulseaudio:hover,
+      #custom-mic:hover,
       #wireplumber:hover,
       #custom-media:hover,
       #tray:hover,
