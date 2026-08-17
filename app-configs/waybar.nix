@@ -64,14 +64,14 @@
         };
 
         "custom/mic" = {
-          exec = "${config.home.homeDirectory}/NixOS/scripts/mic-status.sh";
+          exec = "${config.home.homeDirectory}/NixOS/scripts/mic-ctl.sh status";
           interval = 2;
           format = "{}";
           tooltip = false;
           on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-sound-picker.sh source";
-          on-click-middle = "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
-          on-scroll-up = "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%+ -l 1.5";
-          on-scroll-down = "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-";
+          on-click-middle = "${config.home.homeDirectory}/NixOS/scripts/mic-ctl.sh mute";
+          on-scroll-up = "${config.home.homeDirectory}/NixOS/scripts/mic-ctl.sh vol-up";
+          on-scroll-down = "${config.home.homeDirectory}/NixOS/scripts/mic-ctl.sh vol-down";
         };
 
         "network" = {
