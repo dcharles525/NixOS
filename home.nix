@@ -25,10 +25,16 @@
     ELECTRON_OZONE_PLATFORM_HINT = "x11";
   };
   home.stateVersion = "24.11";
-  home.sessionPath = [ 
+  home.sessionPath = [
     "$HOME/.npm-packages/bin"
     "$HOME/.local/bin"
   ];
+
+  # xdg-desktop-portal scans only the FIRST portals dir in XDG_DATA_DIRS, and
+  # home-manager-path (which ships hyprland.portal) wins. Without gtk.portal
+  # in the same profile there is no FileChooser portal, so native file
+  # dialogs silently fail. Keep this alongside xdg.portal.extraPortals.
+  home.packages = [ pkgs.xdg-desktop-portal-gtk ];
 
   home.file.".config/rofi/config.rasi".text = ''
     * {
