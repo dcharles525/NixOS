@@ -52,9 +52,13 @@ in
 
   # Enable wakeup for USB HID devices (keyboard/mouse) so they can resume from s2idle.
   # Logitech Bolt receiver (046d:c548) excluded — it polls continuously and wakes s2idle instantly.
+  # Realtek RTL8821CE Bluetooth radio (13d3:3533) — disable USB autosuspend. Default 2s
+  # timeout suspends the chip within seconds of BT going idle, and wakeup is off, so
+  # trusted headphones can't page the host to reconnect after they've been powered off.
   services.udev.extraRules = ''
     ACTION=="add", SUBSYSTEM=="usb", DRIVER=="usbhid", ATTR{power/wakeup}="enabled"
     ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
+    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="13d3", ATTRS{idProduct}=="3533", ATTR{power/control}="on"
   '';
 
   virtualisation.docker.enable = true;
@@ -138,6 +142,11 @@ in
       };
       Policy = {
         AutoEnable = "true";
+        # Actively reconnect trusted devices advertising these profiles when the
+        # radio sees them. A2DP sink + AVRCP + HFP handset cover audio headphones.
+        ReconnectUUIDs = "0000110b-0000-1000-8000-00805f9b34fb,0000110e-0000-1000-8000-00805f9b34fb,0000111e-0000-1000-8000-00805f9b34fb";
+        ReconnectAttempts = "7";
+        ReconnectIntervals = "1,2,4,8,16,32,64";
       };
     };
   };
