@@ -1,9 +1,4 @@
 { config, pkgs, lib, inputs, ... }:
-let
-  hyprland-pkg = (inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland).overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ../../app-configs/hypr/hyprland-tc1.patch ];
-  });
-in
 {
   #
   # Config Setup
@@ -41,7 +36,6 @@ in
       SDL2
       libglvnd          # libEGL.so.1, libOpenGL.so.0, libGL.so.1 — dispatch layer
       mesa              # libEGL_mesa.so.0, libGLX_mesa.so.0 — Mesa implementation for Zink
-      openssl_1_1       # libcrypto.so.1.1, libssl.so.1.1 — rs2client links against OpenSSL 1.1
       zlib
       vulkan-loader     # Vulkan ICD loader — needed when rs2client uses MESA_LOADER_DRIVER_OVERRIDE=zink
       stdenv.cc.cc.lib  # libstdc++.so.6
@@ -76,7 +70,7 @@ in
   };
 
   hardware.logitech.wireless.enable = true;
-  hardware.logitech.wireless.enableGraphical = true;
+  programs.solaar.enable = true;
 
   #
   # Bootloader
@@ -111,8 +105,7 @@ in
   };
   home-manager = {
     backupFileExtension = "backup";
-    extraSpecialArgs = { inherit inputs; host="desktop";};
-    sharedModules = [ inputs.weathr.homeModules.weathr ];
+    extraSpecialArgs = { inherit inputs; host="desktop"; };
     users = {
       "d" = import ./../../home.nix;
     };
@@ -212,8 +205,8 @@ in
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    package = hyprland-pkg;
-    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+    package = pkgs.hyprland;
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
   };
 
   programs.waybar = {
@@ -305,7 +298,7 @@ in
     circumflex
     dunst
     libnotify
-    swww
+    awww
     rofi
     nautilus
     iwd
@@ -325,7 +318,6 @@ in
     libreoffice
     chromium
     gotop
-    bambu-studio
     discord
   ];
 
@@ -337,8 +329,8 @@ in
     }];
     packages = [
       "com.adamcake.Bolt"
-      "org.freedesktop.Platform.GL.nvidia-595-71-05"
-      "org.freedesktop.Platform.GL32.nvidia-595-71-05"
+      "org.freedesktop.Platform.GL.nvidia-595-99-02"
+      "org.freedesktop.Platform.GL32.nvidia-595-99-02"
     ];
     overrides = {
       "com.adamcake.Bolt" = {
@@ -346,10 +338,10 @@ in
         # RS3 renders via Zink (Mesa OpenGL-over-Vulkan) to avoid NVIDIA's broken
         # EGL+Wayland path. VK_DRIVER_FILES is the critical var — it points Vulkan
         # to the correct NVIDIA ICD so Zink uses the GPU rather than llvmpipe.
-        # The GL extension version (nvidia-595-71-05) must exactly match the running
+        # The GL extension version (nvidia-595-99-02) must exactly match the running
         # driver or Vulkan gets VK_ERROR_DEVICE_LOST. rs_launch_command in
         # ~/.config/bolt-launcher/launcher.json sets the Zink env vars.
-        Environment.variables = "__EGL_VENDOR_LIBRARY_DIRS=/usr/lib/x86_64-linux-gnu/GL/glvnd/egl_vendor.d;LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/GL/nvidia-595-71-05/lib;VK_DRIVER_FILES=/usr/lib/x86_64-linux-gnu/GL/vulkan/icd.d/nvidia_icd.json";
+        Environment.variables = "__EGL_VENDOR_LIBRARY_DIRS=/usr/lib/x86_64-linux-gnu/GL/glvnd/egl_vendor.d;LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/GL/nvidia-595-99-02/lib;VK_DRIVER_FILES=/usr/lib/x86_64-linux-gnu/GL/vulkan/icd.d/nvidia_icd.json";
       };
     };
   };

@@ -158,7 +158,7 @@
     waybar
     dunst
     libnotify
-    swww
+    awww
     rofi
     nautilus
     iwd

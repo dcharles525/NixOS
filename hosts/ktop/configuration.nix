@@ -1,11 +1,5 @@
 { config, pkgs, lib, inputs, ... }:
 
-let
-  hyprland-pkg = (inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland).overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ../../app-configs/hypr/hyprland-tc1.patch ];
-  });
-in
-
 {
   #
   # Config Setup
@@ -61,7 +55,7 @@ in
   virtualisation.docker.enable = true;
 
   hardware.logitech.wireless.enable = true;
-  hardware.logitech.wireless.enableGraphical = true;
+  programs.solaar.enable = true;
 
   #
   # Bootloader
@@ -86,7 +80,7 @@ in
   home-manager = {
     useGlobalPkgs = true;
     backupFileExtension = "backup";
-    extraSpecialArgs = { inherit inputs; host="ktop";};
+    extraSpecialArgs = { inherit inputs; host="ktop"; };
     users = {
       "d" = import ./../../home.nix;
     };
@@ -169,8 +163,8 @@ in
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    package = hyprland-pkg;
-    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+    package = pkgs.hyprland;
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
   };
 
   # Retain coredumps so we can backtrace Hyprland/hyprlock/hyprpaper aborts
@@ -380,7 +374,7 @@ in
     circumflex
     dunst
     libnotify
-    swww
+    awww
     rofi
     nautilus
     iwd

@@ -11,15 +11,6 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    hyprland = {
-      url = "github:hyprwm/Hyprland/v0.55.1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    hyprlock = {
-      url = "github:hyprwm/hyprlock/b31b2696dc3f3731eda471f68c451429db55af3c";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    weathr.url = "github:Veirt/weathr";
   };
 
   outputs = { self, nixpkgs, ... }@inputs:

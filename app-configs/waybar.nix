@@ -146,7 +146,7 @@
           tooltip-format = "Power Profile: {}";
         };
         "custom/disks" = {
-          format = "🖴 {}";
+          format = "󰋊 {}";
           interval = 2;
           exec =
             let
