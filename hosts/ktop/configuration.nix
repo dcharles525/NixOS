@@ -163,7 +163,9 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    package = pkgs.hyprland;
+    package = pkgs.hyprland.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ../../app-configs/hypr/hyprland-session-lock-null-guard.patch ];
+    });
     portalPackage = pkgs.xdg-desktop-portal-hyprland;
   };
 

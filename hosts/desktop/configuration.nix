@@ -49,11 +49,24 @@
   # Realtek RTL8821CE Bluetooth radio (13d3:3533) — disable USB autosuspend. Default 2s
   # timeout suspends the chip within seconds of BT going idle, and wakeup is off, so
   # trusted headphones can't page the host to reconnect after they've been powered off.
+  # ENV{DEVTYPE}=="usb_device" targets the parent USB device node (which owns
+  # power/wakeup) instead of its interfaces (which don't and silently no-op).
+  #
+  # PCI-level wakeup disabled for RTL8168 Ethernet (04:00.0) and RTL8821CE
+  # Wi-Fi (03:00.0) and their PCIe root ports (00:1c.2, 00:1c.0). Realtek NICs
+  # default to WOL/WoWLAN enabled by firmware; the constant broadcast/mDNS
+  # traffic in any real network wakes s2idle within ~3 seconds. Disabling PCI
+  # wakeup on both the device and its root port ensures a PME cannot propagate.
   services.udev.extraRules = ''
-    ACTION=="add", SUBSYSTEM=="usb", DRIVER=="usbhid", ATTR{power/wakeup}="enabled"
-    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
-    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="13d3", ATTRS{idProduct}=="3533", ATTR{power/control}="on"
+    ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", DRIVERS=="usbhid", ATTR{power/wakeup}="enabled"
+    ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
+    ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="13d3", ATTRS{idProduct}=="3533", ATTR{power/control}="on"
+    ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:04:00.0", ATTR{power/wakeup}="disabled"
+    ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:03:00.0", ATTR{power/wakeup}="disabled"
+    ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:00:1c.2", ATTR{power/wakeup}="disabled"
+    ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:00:1c.0", ATTR{power/wakeup}="disabled"
   '';
+
 
   virtualisation.docker.enable = true;
   virtualisation.docker.daemon.settings = {
@@ -78,12 +91,27 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  # Default entry auto-selects with no delay — critical for hibernate wake
+  # UX (otherwise the systemd-boot menu appears every resume). Hold SPACE
+  # during POST to interrupt if you need to pick an older generation.
+  boot.loader.timeout = 0;
   boot.kernelParams = [
     "systemd.unified_cgroup_hierarchy=1"
+    # NVIDIA VRAM save/restore across S4 (hibernate). Still required even
+    # though we no longer use suspend — hibernate writes the RAM image to
+    # swap and needs VRAM contents preserved into system RAM first.
+    #   - PreserveVideoMemoryAllocations=1: nvidia-suspend.service saves VRAM
+    #     to system RAM (via /var/tmp) so it ends up in the hibernation image.
+    #   - nvidia_drm.fbdev=1: nvidia owns fb0 directly, so DRM re-init on
+    #     resume doesn't race with fbcon takeover; avoids the sync FD
+    #     semaphore surface error family (__nv_drm_semsurf_wait_fence_work_cb).
     "nvidia.NVreg_PreserveVideoMemoryAllocations=1"
     "nvidia_drm.modeset=1"
-    # S3 hard-freezes on NVIDIA resume (confirmed twice). s2idle survives cleanly.
-    "mem_sleep_default=s2idle"
+    "nvidia_drm.fbdev=1"
+    # Desktop is hibernate-only. S3 hard-freezes at ENTRY on NVIDIA (3x
+    # confirmed with 595.99.02). s2idle held after Bolt/WOL wake fixes but
+    # kept fans/RGB lit — not what we want, so all suspend paths route to
+    # hibernate now (waybar button, hyprlock icon, hypridle timeout).
     # Long s2idle (>several hours) loses VRAM self-refresh on NVIDIA → modeset
     # can't recover → black displays on wake. Route the kernel at swap so
     # suspend-then-hibernate can promote to S4 after HibernateDelaySec.
@@ -189,6 +217,44 @@
   hardware.nvidia-container-toolkit.enable = true;
   services.xserver.videoDrivers = [ "nvidia" ];
 
+  # systemd 256+ has a known race freezing user.slice on proprietary NVIDIA
+  # drivers (nixpkgs#371058). Applied only to systemd-hibernate since desktop
+  # never uses the plain suspend paths (hibernate-only).
+  systemd.services = {
+    systemd-hibernate.environment.SYSTEMD_SLEEP_FREEZE_USER_SESSIONS = "false";
+    disable-wol-enp4s0 = {
+      description = "Disable Wake-on-LAN on enp4s0";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "network-pre.target" ];
+      bindsTo = [ "sys-subsystem-net-devices-enp4s0.device" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.ethtool}/bin/ethtool -s enp4s0 wol d";
+        RemainAfterExit = true;
+      };
+    };
+
+    # /proc/acpi/wakeup is toggle-based: writing the device name flips its
+    # state. AWAC (RTC alarm) and XHCI (USB controller) are BIOS-armed to
+    # wake from S4 and cause hibernate to auto-resume on this box.
+    disable-acpi-wake-sources = {
+      description = "Disable AWAC (RTC) and XHCI (USB) ACPI S4 wake sources";
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = pkgs.writeShellScript "disable-acpi-wake" ''
+          set -eu
+          for dev in AWAC XHCI; do
+            if grep -qE "^$dev[[:space:]].*enabled" /proc/acpi/wakeup; then
+              echo "$dev" > /proc/acpi/wakeup
+            fi
+          done
+        '';
+        RemainAfterExit = true;
+      };
+    };
+  };
+
   security.pam.services.hyprlock = {};
   fonts.packages = with pkgs; [
     fira-code
@@ -205,7 +271,9 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    package = pkgs.hyprland;
+    package = pkgs.hyprland.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ../../app-configs/hypr/hyprland-session-lock-null-guard.patch ];
+    });
     portalPackage = pkgs.xdg-desktop-portal-hyprland;
   };
 
@@ -302,7 +370,6 @@
     rofi
     nautilus
     iwd
-    slack
     brightnessctl
     pulseaudio
     iw
@@ -310,15 +377,11 @@
     opencode
 
     # Misc Apps
-    gparted
-    rpi-imager
     partclone
-    yaak
     qimgv
     libreoffice
     chromium
     gotop
-    discord
   ];
 
   services.flatpak = {

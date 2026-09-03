@@ -129,8 +129,11 @@
         };
         "custom/suspend" = {
           format = "⏾";
-          tooltip-format = "Sleeply Time";
-          on-click = "loginctl lock-session && sleep 1 && systemctl suspend";
+          # Desktop uses hibernate — s2idle keeps fans/RGB lit and S3 hard-freezes
+          # on this NVIDIA box (3x confirmed). Ktop stays on plain suspend since
+          # its LUKS-encrypted swap makes hibernate unreliable.
+          tooltip-format = if host == "desktop" then "Hibernate" else "Sleeply Time";
+          on-click = "loginctl lock-session && sleep 1 && systemctl ${if host == "desktop" then "hibernate" else "suspend"}";
         };
         "custom/poweroff" = {
           format = "⏻ ";

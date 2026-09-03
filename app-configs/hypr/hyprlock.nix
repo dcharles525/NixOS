@@ -29,7 +29,7 @@ in
     extraConfig = ''
       # GENERAL
       general {
-          hide_cursor = ${if specialArgs.host == "desktop" then "true" else "false"}
+          hide_cursor = false
           ignore_empty_input = true
       }
 
@@ -108,7 +108,7 @@ in
         position = -50, -300
         halign = center
         valign = center
-        onclick = systemctl suspend
+        onclick = systemctl ${if specialArgs.host == "desktop" then "hibernate" else "suspend"}
       }
 
       # SHUTDOWN BUTTON BG

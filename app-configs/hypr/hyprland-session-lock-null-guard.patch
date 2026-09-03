@@ -1,0 +1,17 @@
+diff --git a/src/render/Renderer.cpp b/src/render/Renderer.cpp
+index 249f084..0aa294e 100644
+--- a/src/render/Renderer.cpp
++++ b/src/render/Renderer.cpp
+@@ -1077,6 +1077,12 @@ void IHyprRenderer::renderSessionLockSurface(WP<SSessionLockSurface> pSurface, P
+ 
+     renderdata.blur     = *PSESSIONLOCKBLUR && *PSESSIONLOCKXRAY;
+     renderdata.surface  = pSurface->surface->surface();
++    // Guard: wl_surface may be null when the output was removed while the
++    // session was locked (e.g. NVIDIA s2idle resume triggers a DRM connector
++    // reconnect that leaves the SSessionLockSurface entry pointing at a
++    // torn-down wl_surface). breadthfirst() would then dereference null.
++    if (!renderdata.surface)
++        return;
+     renderdata.decorate = false;
+     renderdata.w        = pMonitor->m_size.x;
+     renderdata.h        = pMonitor->m_size.y;
