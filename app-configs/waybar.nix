@@ -1,4 +1,4 @@
-{ config, host, ... }:
+{ config, pkgs, host, ... }:
 {
   programs.waybar = {
     enable = true;
@@ -15,6 +15,7 @@
           "hyprland/window"
         ];
         modules-right = [
+          "mpris"
           "pulseaudio"
           "custom/mic"
           "network"
@@ -45,6 +46,35 @@
           };
         };
         
+        "mpris" = {
+          # Browser media (YouTube, SoundCloud, Spotify web) all speak MPRIS
+          # via the browser's dbus integration. Firefox needs
+          # media.hardwaremediakeys.enabled = true in about:config to expose.
+          format = "{player_icon} {dynamic}";
+          format-paused = "{status_icon} {dynamic}";
+          player-icons = {
+            default = "▶";
+            firefox = "";
+            chromium = "";
+            spotify = "";
+            mpv = "";
+          };
+          status-icons = {
+            playing = "▶";
+            paused = "⏸";
+            stopped = "⏹";
+          };
+          max-length = 60;
+          dynamic-order = [ "title" "artist" ];
+          dynamic-separator = " · ";
+          on-click = "playerctl play-pause";
+          on-click-right = "playerctl next";
+          on-click-middle = "playerctl previous";
+          on-scroll-up = "playerctl next";
+          on-scroll-down = "playerctl previous";
+          tooltip-format = "{status} — {player}\n{title}\n{artist}";
+        };
+
         "pulseaudio" = {
           format = "{icon}  {volume}%";
           format-bluetooth = "{icon} {volume}%";
@@ -59,7 +89,11 @@
             car = "";
             default = ["" "" ""];
           };
-          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-sound-picker.sh sink";
+          # Click opens the AGS Media popover (audio + MPRIS combined);
+          # right-click keeps pwvucontrol as the "advanced" fallback for
+          # per-app routing and profile switching.
+          on-click = "ags request 'toggle media'";
+          on-click-right = "${pkgs.pwvucontrol}/bin/pwvucontrol";
           on-click-middle = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
         };
 
@@ -80,7 +114,8 @@
           tooltip-format = "{ifname} via {gwaddr} ";
           format-linked = "{ifname} (No IP) ";
           format-disconnected = "Disconnected ⚠";
-          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-wifi-menu.sh";
+          on-click = "ags request 'toggle wifi'";
+          on-click-right = "${pkgs.iwgtk}/bin/iwgtk";
         };
         "bluetooth" = {
           format = " {status}";
@@ -90,7 +125,8 @@
           tooltip-format-connected = "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}";
           tooltip-format-enumerate-connected = "{device_alias}\t{device_address}";
           tooltip-format-enumerate-connected-battery = "{device_alias}\t{device_address}\t{device_battery_percentage}%";
-          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-bluetooth-menu.sh";
+          on-click = "ags request 'toggle bluetooth'";
+          on-click-right = "${pkgs.overskride}/bin/overskride";
         };
         "cpu" = {
             format = "  {usage}%";
@@ -242,6 +278,7 @@
       #custom-gpu,
       #custom-mirror,
       #custom-claude,
+      #mpris,
       #mpd {
         padding: 2px 10px;
         border-radius: 15px;
@@ -272,6 +309,7 @@
       #custom-gpu:hover,
       #custom-mirror:hover,
       #custom-claude:hover,
+      #mpris:hover,
       #mpd:hover {
         background: rgba(255, 255, 255, 0.08);
       }
@@ -279,6 +317,14 @@
       #custom-claude.stale {
         opacity: 0.45;
       }
+
+      #mpris.playing {
+        color: #FFC519;
+      }
+      #mpris.paused {
+        opacity: 0.6;
+      }
+
 
       #workspaces button {
         background: transparent;

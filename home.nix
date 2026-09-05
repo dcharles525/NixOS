@@ -8,7 +8,8 @@
     ./app-configs/hypr/hyprlock.nix
     ./app-configs/waybar.nix
     ./app-configs/ghostty.nix
-    ./app-configs/dunst.nix
+    ./app-configs/swaync.nix
+    ./app-configs/ags.nix
     ./app-configs/claude.nix
     ./app-configs/bash.nix
   ];
@@ -247,6 +248,22 @@
       package = pkgs.catppuccin-cursors.mochaDark;
       name = "catppuccin-mocha-dark-cursors";
     };
+    # Libadwaita apps (overskride, iwgtk, pwvucontrol, etc.) ignore
+    # gtk4.theme and use their own stylesheet. Override the named accent
+    # tokens so they match the rofi/waybar yellow-on-black aesthetic.
+    gtk4.extraCss = ''
+      @define-color accent_color #FFC519;
+      @define-color accent_bg_color #FFC519;
+      @define-color accent_fg_color #000000;
+
+      @define-color destructive_color #dd5633;
+      @define-color destructive_bg_color #dd5633;
+      @define-color destructive_fg_color #000000;
+
+      @define-color success_color #70a040;
+      @define-color warning_color #FFC519;
+      @define-color error_color   #dd5633;
+    '';
   };
 
   xdg.configFile."opencode/config.json".text = builtins.toJSON {

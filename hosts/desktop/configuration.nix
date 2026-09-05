@@ -364,7 +364,7 @@
 
     # Media
     circumflex
-    dunst
+    swaynotificationcenter
     libnotify
     awww
     rofi
@@ -375,6 +375,10 @@
     iw
     lemonbar
     opencode
+    playerctl
+    overskride
+    iwgtk
+    pwvucontrol
 
     # Misc Apps
     partclone

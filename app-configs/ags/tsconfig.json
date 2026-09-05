@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "strict": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "astal/gtk4",
+    "types": ["astal/gtk4"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "astal": ["./node_modules/astal/gjs/src/index.ts"],
+      "astal/*": ["./node_modules/astal/gjs/src/*"]
+    }
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}

@@ -178,6 +178,9 @@
       hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("systemctl --user start hyprlock"))
       hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("iwmenu -l rofi"))
 
+      -- AGS popovers (widget shell) — proof-of-life bind. Toggle Hello popover.
+      hl.bind(mainMod .. " + grave", hl.dsp.exec_cmd("ags request 'toggle hello'"))
+
       -- Move focus
       hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
       hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))

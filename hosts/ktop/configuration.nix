@@ -374,13 +374,17 @@
 
     # Media
     circumflex
-    dunst
+    swaynotificationcenter
     libnotify
     awww
     rofi
     nautilus
     iwd
     slack
+    playerctl
+    overskride
+    iwgtk
+    pwvucontrol
     # openshot-qt wrapped with the Qt SVG plugin: without it the export
     # dialog's hw-accel icons are null QIcons, which PySide6 treats as falsy,
     # so every export target gets skipped and the dropdowns are empty
