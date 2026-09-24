@@ -50,19 +50,27 @@
           # Browser media (YouTube, SoundCloud, Spotify web) all speak MPRIS
           # via the browser's dbus integration. Firefox needs
           # media.hardwaremediakeys.enabled = true in about:config to expose.
+          # `interval` unset → signal-based updates (cheap, no polling loop).
+          # No-player state: leave the slot empty rather than showing an
+          # awkward stray icon — reduces bar clutter when nothing's playing.
           format = "{player_icon} {dynamic}";
           format-paused = "{status_icon} {dynamic}";
+          format-stopped = "";
+          ignored-players = [ ];
+          # All Nerd Font PUA glyphs on purpose: the Unicode ▶/⏸/⏹ fall
+          # back to different fonts (DejaVu, Noto Sans Symbols 2) with
+          # different line heights, so the bar grew/shrank on state change.
           player-icons = {
-            default = "▶";
-            firefox = "";
-            chromium = "";
-            spotify = "";
-            mpv = "";
+            default = "";
+            firefox = "";
+            chromium = "";
+            spotify = "";
+            mpv = "";
           };
           status-icons = {
-            playing = "▶";
-            paused = "⏸";
-            stopped = "⏹";
+            playing = "";
+            paused = "";
+            stopped = "";
           };
           max-length = 60;
           dynamic-order = [ "title" "artist" ];
