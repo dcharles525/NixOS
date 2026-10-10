@@ -139,9 +139,8 @@ export default function Bluetooth(monitor: Gdk.Monitor) {
           cssClasses={["scroll"]}
           hscrollbarPolicy={Gtk.PolicyType.NEVER}
           vscrollbarPolicy={Gtk.PolicyType.AUTOMATIC}
-          minContentHeight={80}
-          maxContentHeight={260}
-          propagateNaturalHeight
+          minContentHeight={300}
+          maxContentHeight={300}
         >
           <box orientation={Gtk.Orientation.VERTICAL} spacing={6}>
             {bind(bt, "devices").as((devs) => {

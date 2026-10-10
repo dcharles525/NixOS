@@ -254,9 +254,8 @@ export default function Wifi(monitor: Gdk.Monitor) {
           cssClasses={["scroll"]}
           hscrollbarPolicy={Gtk.PolicyType.NEVER}
           vscrollbarPolicy={Gtk.PolicyType.AUTOMATIC}
-          minContentHeight={80}
-          maxContentHeight={260}
-          propagateNaturalHeight
+          minContentHeight={300}
+          maxContentHeight={300}
         >
           <box orientation={Gtk.Orientation.VERTICAL} spacing={4}>
             {networks((nets) =>

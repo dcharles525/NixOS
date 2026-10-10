@@ -1,0 +1,46 @@
+FROM deepseek-r1:8b-llama-distill-q4_K_M
+PARAMETER num_ctx 131072
+TEMPLATE """
+{{- if or .System .Tools }}
+{{- if .System }}{{ .System }}
+{{ end }}
+{{- if .Tools }}
+You have access to the following tools. When a tool would help, you MUST call it instead of explaining how to use it. To call a tool, your entire reply after thinking must be a single raw JSON object, with no markdown, no code fences, and no other text:
+{"name": "<tool name>", "arguments": {<arguments>}}
+After you receive the tool result, answer the user normally.
+
+Available tools:
+{{- range .Tools }}
+{{ .Function }}
+{{- end }}
+{{ end }}
+{{- end }}
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1}}
+{{- if eq .Role "user" }}<｜User｜>{{ .Content }}
+{{- else if eq .Role "tool" }}<｜User｜>Tool result:
+{{ .Content }}
+{{- else if eq .Role "assistant" }}<｜Assistant｜>
+  {{- if and $.IsThinkSet (and $last .Thinking) -}}
+<think>
+{{ .Thinking }}
+</think>
+{{- end }}
+{{- if .ToolCalls }}
+{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}{{ end }}
+{{- else }}{{ .Content }}{{- end }}
+{{- if not $last }}<｜end▁of▁sentence｜>{{- end }}
+{{- end }}
+{{- if and $last (ne .Role "assistant") }}<｜Assistant｜>
+{{- if and $.IsThinkSet (not $.Think) -}}
+<think>
+
+</think>
+
+{{ end }}
+{{- end -}}
+{{- end }}"""
+PARAMETER stop "<｜begin▁of▁sentence｜>"
+PARAMETER stop "<｜end▁of▁sentence｜>"
+PARAMETER stop "<｜User｜>"
+PARAMETER stop "<｜Assistant｜>"

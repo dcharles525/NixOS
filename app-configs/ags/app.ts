@@ -5,6 +5,7 @@ import Hello from "./widget/Hello"
 import Media from "./widget/Media"
 import Bluetooth from "./widget/Bluetooth"
 import Wifi from "./widget/Wifi"
+import System from "./widget/System"
 
 // One instance of each popover per monitor, named "<base>-<monitor-name>"
 // (e.g. "media-DP-1"). Toggling from the bar routes to the popover on the
@@ -71,6 +72,7 @@ App.start({
       Media(m)
       Bluetooth(m)
       Wifi(m)
+      System(m)
     })
   },
 })

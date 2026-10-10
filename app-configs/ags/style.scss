@@ -103,9 +103,21 @@ $radius: 15px;
   opacity: 0.35;
 }
 
+// Transport controls only; .mpris-btn is shared with popover header buttons.
+.mpris-transport {
+  min-width: 52px;
+  min-height: 52px;
+  padding: 6px 10px;
+  font-size: 28px;
+}
+
 .mpris-play {
   background: $muted-hover;
   border: 1px solid $accent-soft;
+  border-radius: 14px;
+  min-width: 64px;
+  min-height: 64px;
+  font-size: 34px;
 }
 .mpris-play:hover {
   background: $accent-soft;
@@ -205,4 +217,29 @@ entry {
 }
 entry:focus {
   border-color: $accent-soft;
+}
+
+// System popover meters
+.sys-row {
+  background: $muted;
+  border: 1px solid $border-subtle;
+  border-radius: 12px;
+  padding: 10px;
+}
+.sys-title {
+  font-weight: bold;
+}
+.sys-bar trough {
+  min-height: 6px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 3px;
+}
+.sys-bar block.filled {
+  background: $accent;
+  border-radius: 3px;
+}
+// GtkLevelBar default offsets tag the filled block low (<=25%), high (<=75%),
+// full (>75%). "high" is the middle band, so only full goes red.
+.sys-bar block.filled.full {
+  background: $urgent;
 }

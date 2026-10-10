@@ -44,6 +44,10 @@ in
       Description = "AGS widget shell (Astal)";
       PartOf = [ "graphical-session.target" ];
       After = [ "graphical-session.target" ];
+      # Source store path in the unit means any widget/style edit changes the
+      # unit, so home-manager restarts ags on switch instead of leaving the
+      # old process running with stale windows.
+      X-Restart-Triggers = [ "${./ags}" ];
     };
     Service = {
       # --gtk4 is REQUIRED — it LD_PRELOADs libgtk4-layer-shell.so. Without

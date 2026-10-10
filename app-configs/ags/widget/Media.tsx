@@ -27,16 +27,16 @@ function PlayerCard({ player }: { player: Mpris.Player }) {
         ellipsize={3}
         maxWidthChars={40}
       />
-      <box orientation={Gtk.Orientation.HORIZONTAL} spacing={12} halign={Gtk.Align.CENTER}>
+      <box orientation={Gtk.Orientation.HORIZONTAL} spacing={20} halign={Gtk.Align.CENTER}>
         <button
-          cssClasses={["mpris-btn"]}
+          cssClasses={["mpris-btn", "mpris-transport"]}
           onClicked={() => player.previous()}
           sensitive={bind(player, "canGoPrevious")}
         >
           <label label="󰒮" />
         </button>
         <button
-          cssClasses={["mpris-btn", "mpris-play"]}
+          cssClasses={["mpris-btn", "mpris-transport", "mpris-play"]}
           onClicked={() => player.play_pause()}
         >
           <label
@@ -46,7 +46,7 @@ function PlayerCard({ player }: { player: Mpris.Player }) {
           />
         </button>
         <button
-          cssClasses={["mpris-btn"]}
+          cssClasses={["mpris-btn", "mpris-transport"]}
           onClicked={() => player.next()}
           sensitive={bind(player, "canGoNext")}
         >

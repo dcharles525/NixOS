@@ -5,6 +5,9 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     # Newer unstable used only for selected packages (tailscale, claude-code)
     nixpkgs-latest.url = "github:nixos/nixpkgs/nixos-unstable";
+    # libopenshot stopped building against abseil 20260817 (2026-10-09 bump).
+    # Pinned to the last nixpkgs where it built; drop once nixpkgs fixes it.
+    nixpkgs-openshot.url = "github:nixos/nixpkgs/34ab99075ac4f7e40cf037eef32cb1c360bb85e9";
     nix-flatpak.url = "github:gmodena/nix-flatpak";
     iwmenu.url = "github:e-tho/iwmenu";
     home-manager = {

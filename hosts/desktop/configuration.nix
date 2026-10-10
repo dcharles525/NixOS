@@ -396,8 +396,8 @@
     }];
     packages = [
       "com.adamcake.Bolt"
-      "org.freedesktop.Platform.GL.nvidia-595-99-02"
-      "org.freedesktop.Platform.GL32.nvidia-595-99-02"
+      "org.freedesktop.Platform.GL.nvidia-595-104-02"
+      "org.freedesktop.Platform.GL32.nvidia-595-104-02"
     ];
     overrides = {
       "com.adamcake.Bolt" = {
@@ -405,10 +405,10 @@
         # RS3 renders via Zink (Mesa OpenGL-over-Vulkan) to avoid NVIDIA's broken
         # EGL+Wayland path. VK_DRIVER_FILES is the critical var — it points Vulkan
         # to the correct NVIDIA ICD so Zink uses the GPU rather than llvmpipe.
-        # The GL extension version (nvidia-595-99-02) must exactly match the running
+        # The GL extension version (nvidia-595-104-02) must exactly match the running
         # driver or Vulkan gets VK_ERROR_DEVICE_LOST. rs_launch_command in
         # ~/.config/bolt-launcher/launcher.json sets the Zink env vars.
-        Environment.variables = "__EGL_VENDOR_LIBRARY_DIRS=/usr/lib/x86_64-linux-gnu/GL/glvnd/egl_vendor.d;LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/GL/nvidia-595-99-02/lib;VK_DRIVER_FILES=/usr/lib/x86_64-linux-gnu/GL/vulkan/icd.d/nvidia_icd.json";
+        Environment.variables = "__EGL_VENDOR_LIBRARY_DIRS=/usr/lib/x86_64-linux-gnu/GL/glvnd/egl_vendor.d;LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/GL/nvidia-595-104-02/lib;VK_DRIVER_FILES=/usr/lib/x86_64-linux-gnu/GL/vulkan/icd.d/nvidia_icd.json";
       };
     };
   };

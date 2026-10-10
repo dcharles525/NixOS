@@ -388,13 +388,16 @@
     # openshot-qt wrapped with the Qt SVG plugin: without it the export
     # dialog's hw-accel icons are null QIcons, which PySide6 treats as falsy,
     # so every export target gets skipped and the dropdowns are empty
-    (symlinkJoin {
+    # openshot-qt and qtsvg both come from the pinned nixpkgs-openshot (see
+    # flake.nix) so the plugin matches the Qt that openshot was built against.
+    (let op = inputs.nixpkgs-openshot.legacyPackages.${pkgs.stdenv.hostPlatform.system}; in
+    symlinkJoin {
       name = "openshot-qt-svg-fix";
-      paths = [ openshot-qt ];
+      paths = [ op.openshot-qt ];
       nativeBuildInputs = [ makeWrapper ];
       postBuild = ''
         wrapProgram $out/bin/openshot-qt \
-          --prefix QT_PLUGIN_PATH : ${pkgs.qt6.qtsvg}/lib/qt-6/plugins
+          --prefix QT_PLUGIN_PATH : ${op.qt6.qtsvg}/lib/qt-6/plugins
       '';
     })
 

@@ -62,9 +62,7 @@
       local menu        = "wofi --show drun"
 
       -- AUTOSTART
-      hl.on("hyprland.start", function()
-        hl.exec_cmd("waybar")
-      end)
+      -- waybar runs as a systemd user service (waybar.nix), not exec_cmd.
 
       -- ENVIRONMENT
       hl.env("XCURSOR_THEME", "Whiteglass")

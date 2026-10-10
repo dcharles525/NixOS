@@ -1,0 +1,4 @@
+FROM gemma4:e4b
+PARAMETER num_ctx 131072
+# CPU-only: partial GPU offload aborts with GGML_ASSERT(n_inputs < GGML_SCHED_MAX_SPLIT_INPUTS) on ollama 0.21.2
+PARAMETER num_gpu 0

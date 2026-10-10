@@ -2,6 +2,10 @@
 {
   programs.waybar = {
     enable = true;
+    # Run under systemd so a crash restarts the bar. waybar 0.15.0's mpris
+    # module segfaults in playerctl's properties-changed callback when a
+    # player appears (2026-10-09), and the old Hyprland exec_cmd left no bar.
+    systemd.enable = true;
     settings = {
       mainBar = {
         layer = "top";
@@ -20,11 +24,9 @@
           "custom/mic"
           "network"
           "bluetooth"
+          # One "computer" module; CPU/RAM/GPU/disk/temp live in the AGS
+          # System popover so laptops are not crammed.
           "cpu"
-          "memory"
-        ] ++ (if host == "desktop" then [ "custom/gpu" ] else []) ++ [
-          "custom/disks"
-          "temperature"
           "battery"
         ] ++ (if host != "desktop" then [ "custom/power-profile" ] else []) ++ [
           "custom/claude"
@@ -137,20 +139,8 @@
           on-click-right = "${pkgs.overskride}/bin/overskride";
         };
         "cpu" = {
-            format = "  {usage}%";
-            tooltip = true;
-        };
-        "memory" = {
-            format = "  {}%";
-            tooltip = true;
-        };
-        "temperature" = {
-            interval = 10;
-            hwmon-path-abs = "/sys/devices/platform/coretemp.0/hwmon";
-            input-filename = "temp1_input";
-            critical-threshold = 100;
-            format-critical = " {temperatureF}";
-            format = " {temperatureF}°F";
+            format = "󰟀  {usage}%";
+            on-click = "ags request 'toggle system'";
         };
         "battery" = {
             bat = "BAT0";
@@ -192,16 +182,6 @@
           tooltip = true;
           tooltip-format = "Power Profile: {}";
         };
-        "custom/disks" = {
-          format = "󰋊 {}";
-          interval = 2;
-          exec =
-            let
-              # desktop: nvme0n1 (root). ktop: dm-0 (LUKS device mapper over nvme0n1).
-              dev = if host == "desktop" then "nvme0n1" else "dm-0";
-            in
-            "iostat -dx 1 2 ${dev} | grep ${dev} | tail -1 | awk '{print $NF\"%\"}'";
-        };
         "custom/mirror" = {
           exec = "${config.home.homeDirectory}/.config/waybar/scripts/mirror-toggle.sh get";
           on-click = "${config.home.homeDirectory}/.config/waybar/scripts/mirror-toggle.sh toggle";
@@ -217,15 +197,7 @@
           format = "{}";
           tooltip = true;
         };
-      } // (if host == "desktop" then {
-        "custom/gpu" = {
-          format = "󰘚  {}";
-          interval = 2;
-          exec = "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | xargs printf '%s%%'";
-          tooltip = true;
-          tooltip-format = "GPU Usage";
-        };
-      } else {});
+      };
     };
     style = ''
       * {
@@ -264,9 +236,7 @@
       #clock,
       #battery,
       #cpu,
-      #memory,
       #disk,
-      #temperature,
       #backlight,
       #network,
       #bluetooth,
@@ -282,8 +252,6 @@
       #language,
       #custom-poweroff,
       #custom-suspend,
-      #custom-disks,
-      #custom-gpu,
       #custom-mirror,
       #custom-claude,
       #mpris,
@@ -296,9 +264,7 @@
       #battery:hover,
       #bluetooth:hover,
       #cpu:hover,
-      #memory:hover,
       #disk:hover,
-      #temperature:hover,
       #backlight:hover,
       #network:hover,
       #pulseaudio:hover,
@@ -313,8 +279,6 @@
       #language:hover,
       #custom-poweroff:hover,
       #custom-suspend:hover,
-      #custom-disks:hover,
-      #custom-gpu:hover,
       #custom-mirror:hover,
       #custom-claude:hover,
       #mpris:hover,

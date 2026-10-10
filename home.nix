@@ -299,6 +299,32 @@
           "qwen3:8b" = { name = "Qwen 8B"; };
           "gemma4:e4b" = { name = "Gemma 4 E4B (4.5B)"; "tool_call" = true; };
           "gemma4:e4b-32k" = { name = "Gemma 4 E4B (4.5B) 32k"; "tool_call" = true; };
+          "qwen3-coder-128k:latest" = {
+            name = "Qwen3 Coder 30B-A3B (128k ctx)";
+            "tool_call" = true;
+            "limit" = {
+              "context" = 131072;
+              "output" = 32768;
+            };
+          };
+          "gemma4-128k:latest" = {
+            name = "Gemma 4 E4B (4.5B) 128k";
+            "reasoning" = true;
+            "tool_call" = true;
+            "limit" = {
+              "context" = 131072;
+              "output" = 32768;
+            };
+          };
+          "deepseek-r1-llama-128k:latest" = {
+            name = "DeepSeek R1 Distill Llama 8B (128k ctx)";
+            "reasoning" = true;
+            "tool_call" = true;
+            "limit" = {
+              "context" = 131072;
+              "output" = 32768;
+            };
+          };
         };
       };
     };
