@@ -1,4 +1,4 @@
-{ config, host, ... }:
+{ config, pkgs, host, ... }:
 {
   programs.waybar = {
     enable = true;
@@ -15,6 +15,7 @@
           "hyprland/window"
         ];
         modules-right = [
+          "mpris"
           "pulseaudio"
           "custom/mic"
           "network"
@@ -45,6 +46,43 @@
           };
         };
         
+        "mpris" = {
+          # Browser media (YouTube, SoundCloud, Spotify web) all speak MPRIS
+          # via the browser's dbus integration. Firefox needs
+          # media.hardwaremediakeys.enabled = true in about:config to expose.
+          # `interval` unset → signal-based updates (cheap, no polling loop).
+          # No-player state: leave the slot empty rather than showing an
+          # awkward stray icon — reduces bar clutter when nothing's playing.
+          format = "{player_icon} {dynamic}";
+          format-paused = "{status_icon} {dynamic}";
+          format-stopped = "";
+          ignored-players = [ ];
+          # All Nerd Font PUA glyphs on purpose: the Unicode ▶/⏸/⏹ fall
+          # back to different fonts (DejaVu, Noto Sans Symbols 2) with
+          # different line heights, so the bar grew/shrank on state change.
+          player-icons = {
+            default = "";
+            firefox = "";
+            chromium = "";
+            spotify = "";
+            mpv = "";
+          };
+          status-icons = {
+            playing = "";
+            paused = "";
+            stopped = "";
+          };
+          max-length = 60;
+          dynamic-order = [ "title" "artist" ];
+          dynamic-separator = " · ";
+          on-click = "playerctl play-pause";
+          on-click-right = "playerctl next";
+          on-click-middle = "playerctl previous";
+          on-scroll-up = "playerctl next";
+          on-scroll-down = "playerctl previous";
+          tooltip-format = "{status} — {player}\n{title}\n{artist}";
+        };
+
         "pulseaudio" = {
           format = "{icon}  {volume}%";
           format-bluetooth = "{icon} {volume}%";
@@ -59,7 +97,11 @@
             car = "";
             default = ["" "" ""];
           };
-          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-sound-picker.sh sink";
+          # Click opens the AGS Media popover (audio + MPRIS combined);
+          # right-click keeps pwvucontrol as the "advanced" fallback for
+          # per-app routing and profile switching.
+          on-click = "ags request 'toggle media'";
+          on-click-right = "${pkgs.pwvucontrol}/bin/pwvucontrol";
           on-click-middle = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
         };
 
@@ -80,7 +122,8 @@
           tooltip-format = "{ifname} via {gwaddr} ";
           format-linked = "{ifname} (No IP) ";
           format-disconnected = "Disconnected ⚠";
-          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-wifi-menu.sh";
+          on-click = "ags request 'toggle wifi'";
+          on-click-right = "${pkgs.iwgtk}/bin/iwgtk";
         };
         "bluetooth" = {
           format = " {status}";
@@ -90,7 +133,8 @@
           tooltip-format-connected = "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}";
           tooltip-format-enumerate-connected = "{device_alias}\t{device_address}";
           tooltip-format-enumerate-connected-battery = "{device_alias}\t{device_address}\t{device_battery_percentage}%";
-          on-click = "${config.home.homeDirectory}/NixOS/scripts/rofi-bluetooth-menu.sh";
+          on-click = "ags request 'toggle bluetooth'";
+          on-click-right = "${pkgs.overskride}/bin/overskride";
         };
         "cpu" = {
             format = "  {usage}%";
@@ -129,8 +173,11 @@
         };
         "custom/suspend" = {
           format = "⏾";
-          tooltip-format = "Sleeply Time";
-          on-click = "loginctl lock-session && sleep 1 && systemctl suspend";
+          # Desktop uses hibernate — s2idle keeps fans/RGB lit and S3 hard-freezes
+          # on this NVIDIA box (3x confirmed). Ktop stays on plain suspend since
+          # its LUKS-encrypted swap makes hibernate unreliable.
+          tooltip-format = if host == "desktop" then "Hibernate" else "Sleeply Time";
+          on-click = "loginctl lock-session && sleep 1 && systemctl ${if host == "desktop" then "hibernate" else "suspend"}";
         };
         "custom/poweroff" = {
           format = "⏻ ";
@@ -146,7 +193,7 @@
           tooltip-format = "Power Profile: {}";
         };
         "custom/disks" = {
-          format = "🖴 {}";
+          format = "󰋊 {}";
           interval = 2;
           exec =
             let
@@ -239,6 +286,7 @@
       #custom-gpu,
       #custom-mirror,
       #custom-claude,
+      #mpris,
       #mpd {
         padding: 2px 10px;
         border-radius: 15px;
@@ -269,6 +317,7 @@
       #custom-gpu:hover,
       #custom-mirror:hover,
       #custom-claude:hover,
+      #mpris:hover,
       #mpd:hover {
         background: rgba(255, 255, 255, 0.08);
       }
@@ -276,6 +325,14 @@
       #custom-claude.stale {
         opacity: 0.45;
       }
+
+      #mpris.playing {
+        color: #FFC519;
+      }
+      #mpris.paused {
+        opacity: 0.6;
+      }
+
 
       #workspaces button {
         background: transparent;

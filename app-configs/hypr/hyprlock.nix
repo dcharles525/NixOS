@@ -1,10 +1,10 @@
 { pkgs, specialArgs, ... }:
 let
   background = builtins.path { path = ../../assets/background.jpg; name = "background.jpg"; };
-  # hyprlock from flake (commit b31b269) patched to survive TC1/Thunderbolt
-  # link-training output removal during an active session lock. See
-  # hyprlock-tc1.patch for the full rationale.
-  hyprlock-pkg = (specialArgs.inputs.hyprlock.packages.${pkgs.stdenv.hostPlatform.system}.hyprlock).overrideAttrs (old: {
+  # nixpkgs hyprlock (v0.9.6) patched to survive TC1/Thunderbolt link-training
+  # output removal during an active session lock. See hyprlock-tc1.patch for
+  # the full rationale.
+  hyprlock-pkg = pkgs.hyprlock.overrideAttrs (old: {
     patches = (old.patches or [ ]) ++ [ ./hyprlock-tc1.patch ];
   });
 in
@@ -29,7 +29,7 @@ in
     extraConfig = ''
       # GENERAL
       general {
-          hide_cursor = ${if specialArgs.host == "desktop" then "true" else "false"}
+          hide_cursor = false
           ignore_empty_input = true
       }
 
@@ -108,7 +108,7 @@ in
         position = -50, -300
         halign = center
         valign = center
-        onclick = systemctl suspend
+        onclick = systemctl ${if specialArgs.host == "desktop" then "hibernate" else "suspend"}
       }
 
       # SHUTDOWN BUTTON BG

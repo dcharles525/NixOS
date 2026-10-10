@@ -38,13 +38,14 @@
       }
       {
         timeout = 2700;
-        # Desktop uses suspend-then-hibernate: fast s2idle for short cycles, auto-promotes
-        # to S4 after HibernateDelaySec (configured in hosts/desktop/configuration.nix)
-        # so overnight wakes via clean GPU cold-start instead of dead modeset.
-        # ktop stays on plain suspend — its swap is LUKS-encrypted and hibernate needs
-        # separate initrd plumbing not in scope here.
+        # Desktop hibernates directly. s2idle keeps fans/RGB lit (not real
+        # "off" behavior); S3 hard-freezes at entry on this NVIDIA box (3x
+        # confirmed with driver 595.99.02). Hibernate is the only mode that
+        # actually powers the machine down.
+        # ktop stays on plain suspend — its swap is LUKS-encrypted and
+        # hibernate needs separate initrd plumbing not in scope here.
         on-timeout = if specialArgs.host == "desktop"
-          then "systemctl suspend-then-hibernate"
+          then "systemctl hibernate"
           else "systemctl suspend";
       }
     ];

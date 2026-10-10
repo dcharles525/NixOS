@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    # Newer unstable used only for selected packages (tailscale)
+    # Newer unstable used only for selected packages (tailscale, claude-code)
     nixpkgs-latest.url = "github:nixos/nixpkgs/nixos-unstable";
     nix-flatpak.url = "github:gmodena/nix-flatpak";
     iwmenu.url = "github:e-tho/iwmenu";
@@ -11,24 +11,23 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    hyprland = {
-      url = "github:hyprwm/Hyprland/v0.55.1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    hyprlock = {
-      url = "github:hyprwm/hyprlock/b31b2696dc3f3731eda471f68c451429db55af3c";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    weathr.url = "github:Veirt/weathr";
   };
 
   outputs = { self, nixpkgs, ... }@inputs:
   let
     latestPackagesOverlay = { pkgs, ... }: {
       nixpkgs.overlays = [
-        (final: prev: {
-          tailscale = inputs.nixpkgs-latest.legacyPackages.${prev.stdenv.hostPlatform.system}.tailscale;
-        })
+        (final: prev:
+          let
+            # legacyPackages ignores this host's nixpkgs.config, so unfree
+            # packages (claude-code) need nixpkgs-latest imported with it.
+            latest = import inputs.nixpkgs-latest {
+              inherit (prev.stdenv.hostPlatform) system;
+              inherit (prev) config;
+            };
+          in {
+            inherit (latest) tailscale claude-code;
+          })
       ];
     };
   in {

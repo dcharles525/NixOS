@@ -1,0 +1,208 @@
+// Palette lifted from rofi/waybar/swaync — keeps everything visually consistent.
+$bg: #000000a6;
+$fg: #f2f3f4;
+$accent: #FFC519;
+$accent-soft: rgba(255, 197, 25, 0.35);
+$muted: rgba(255, 255, 255, 0.06);
+$muted-hover: rgba(255, 255, 255, 0.10);
+$border-subtle: #ffffff14;
+$ok: #70a040;
+$info: #4da1af;
+$urgent: #dd5633;
+$radius: 15px;
+
+* {
+  font-family: "JetBrains Mono", "Symbols Nerd Font", sans-serif;
+  font-size: 13px;
+}
+
+.popover {
+  background: transparent;
+}
+
+.popover-body {
+  background: $bg;
+  color: $fg;
+  // Soft accent-tinted border (not a hard yellow frame) — reads as a
+  // subtle glow rather than window chrome. Matches dunst's aesthetic.
+  border: 1px solid $accent-soft;
+  border-radius: 18px;
+  padding: 16px;
+  min-width: 340px;
+  max-width: 380px;
+  // Larger, softer shadow gives the "floating overlay" look. Two layers:
+  // a tight lift-shadow + a wider ambient bloom.
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 12px 40px rgba(0, 0, 0, 0.55);
+  margin: 8px;
+}
+
+.popover-title {
+  color: $accent;
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.hint {
+  color: rgba(242, 243, 244, 0.55);
+  font-size: 11px;
+}
+
+.section-label {
+  color: rgba(242, 243, 244, 0.7);
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.divider {
+  background: $border-subtle;
+  min-height: 1px;
+}
+
+// MPRIS card
+.mpris-card {
+  background: $muted;
+  border: 1px solid $border-subtle;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.mpris-title {
+  color: $accent;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.mpris-artist {
+  color: $fg;
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+.mpris-btn {
+  background: transparent;
+  color: $fg;
+  border: none;
+  border-radius: 10px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px 8px;
+  // Nerd Font glyphs — bump size a touch since they're outline-only vs emoji
+  font-size: 18px;
+  font-family: "Symbols Nerd Font", "JetBrains Mono", sans-serif;
+}
+.mpris-btn:hover {
+  background: $muted-hover;
+  color: $accent;
+}
+.mpris-btn:disabled {
+  opacity: 0.35;
+}
+
+.mpris-play {
+  background: $muted-hover;
+  border: 1px solid $accent-soft;
+}
+.mpris-play:hover {
+  background: $accent-soft;
+}
+
+// Volume rows
+.ep-mute {
+  background: transparent;
+  color: $fg;
+  border: none;
+  border-radius: 8px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 2px 6px;
+  font-size: 18px;
+  font-family: "Symbols Nerd Font", "JetBrains Mono", sans-serif;
+}
+.ep-mute:hover {
+  background: $muted-hover;
+  color: $accent;
+}
+// When muted the icon shifts to the urgent red so it reads at a glance
+.ep-mute label {
+  color: inherit;
+}
+
+.ep-slider trough {
+  min-height: 6px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 3px;
+}
+.ep-slider highlight {
+  background: $accent;
+  border-radius: 3px;
+}
+.ep-slider slider {
+  min-width: 14px;
+  min-height: 14px;
+  background: $fg;
+  border-radius: 7px;
+}
+
+.ep-pct {
+  color: rgba(242, 243, 244, 0.65);
+  font-size: 12px;
+}
+
+// Bluetooth device rows
+.bt-device {
+  padding: 6px 4px;
+  border-radius: 8px;
+}
+.bt-device:hover {
+  background: $muted-hover;
+}
+
+// Wifi icon in current-connection card
+.wifi-icon {
+  color: $accent;
+  font-size: 20px;
+  min-width: 24px;
+}
+
+.wifi-icon-inline {
+  color: $accent;
+  font-size: 16px;
+  min-width: 22px;
+}
+
+.wifi-row {
+  padding: 6px 4px;
+  border-radius: 8px;
+}
+.wifi-row:hover {
+  background: $muted-hover;
+}
+
+// Scrollable areas get a subtle scrollbar rather than the loud GTK default.
+.scroll scrollbar {
+  background: transparent;
+}
+.scroll scrollbar slider {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  min-width: 6px;
+}
+.scroll scrollbar slider:hover {
+  background: rgba(255, 197, 25, 0.4);
+}
+
+entry {
+  background: rgba(0, 0, 0, 0.4);
+  color: $fg;
+  border: 1px solid $border-subtle;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+entry:focus {
+  border-color: $accent-soft;
+}
