@@ -1,5 +1,9 @@
 { config, pkgs, lib, inputs, ... }:
-
+let
+  hyprland-pkg = (inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland).overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ../../app-configs/hypr/hyprland-tc1.patch ];
+  });
+in
 {
   #
   # Config Setup
@@ -82,7 +86,17 @@
     "nvidia_drm.modeset=1"
     # S3 hard-freezes on NVIDIA resume (confirmed twice). s2idle survives cleanly.
     "mem_sleep_default=s2idle"
+    # Long s2idle (>several hours) loses VRAM self-refresh on NVIDIA → modeset
+    # can't recover → black displays on wake. Route the kernel at swap so
+    # suspend-then-hibernate can promote to S4 after HibernateDelaySec.
+    "resume=UUID=2271fa51-737a-4ac4-b435-3c6aace266a0"
   ];
+
+  # Auto-promote s2idle → hibernate after 1h idle in suspend.
+  # Short sleeps stay fast (s2idle), overnight gets a clean GPU cold-start via S4.
+  systemd.sleep.settings.Sleep = {
+    HibernateDelaySec = "1h";
+  };
 
   # User Setup
 
@@ -94,6 +108,7 @@
   home-manager = {
     backupFileExtension = "backup";
     extraSpecialArgs = { inherit inputs; host="desktop";};
+    sharedModules = [ inputs.weathr.homeModules.weathr ];
     users = {
       "d" = import ./../../home.nix;
     };
@@ -188,7 +203,7 @@
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    package = hyprland-pkg;
     portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
@@ -228,6 +243,7 @@
     android-tools
     vim-full
     go
+    zig
     protobuf
     openssl
     git
@@ -257,6 +273,7 @@
       requests
       numpy
       flask
+      pytest
     ]))
     iotop
     sysstat
@@ -288,6 +305,7 @@
     pulseaudio
     iw
     lemonbar
+    opencode
 
     # Misc Apps
     gparted
@@ -329,6 +347,7 @@
   services.tailscale.enable = true;
   programs.vim.enable = true;
   programs.firefox.enable = true;
+  # programs.opencode.settings = {}; # module not in current nixpkgs-unstable yet; re-enable after nix flake update nixpkgs
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;

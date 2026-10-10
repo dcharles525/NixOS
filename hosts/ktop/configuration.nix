@@ -4,6 +4,80 @@ let
   hyprland-pkg = (inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland).overrideAttrs (old: {
     patches = (old.patches or [ ]) ++ [ ../../app-configs/hypr/hyprland-tc1.patch ];
   });
+
+  # lazydocker reads the docker context store but ships no ssh:// connection
+  # helper, so it tries to speak HTTP at sshd and times out. Forward the remote
+  # socket instead and point DOCKER_HOST at the local end.
+  # Target host is an ssh alias from ~/.ssh/config (not tracked in this repo).
+  lazydocker-remote = pkgs.writeShellScriptBin "lazydocker-remote" ''
+    set -euo pipefail
+
+    HOST="''${LAZYDOCKER_REMOTE_HOST:-dockerhost}"
+    SOCK="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/docker-$HOST.sock"
+
+    if ! ${pkgs.curl}/bin/curl -s --max-time 5 --unix-socket "$SOCK" \
+        http://localhost/_ping >/dev/null 2>&1; then
+      rm -f "$SOCK"
+
+      # ControlPath=none: with multiplexing on, the forward is owned by this
+      # short-lived client and dies with it.
+      ${pkgs.openssh}/bin/ssh -f -N -T \
+        -o ControlPath=none \
+        -o ExitOnForwardFailure=yes \
+        -L "$SOCK:/var/run/docker.sock" "$HOST"
+    fi
+
+    DOCKER_HOST="unix://$SOCK" exec ${pkgs.lazydocker}/bin/lazydocker "$@"
+  '';
+
+  # One-shot answer to "where did the disk go": the buckets that silently
+  # fill this machine (Trash, docker, nix store), then the biggest dirs in
+  # $HOME. `diskreport --gui` opens baobab's ring chart to drill in; `gdu ~`
+  # is the terminal equivalent. gdu over du: du took >200s on ~/.cache.
+  diskreport = pkgs.writeShellScriptBin "diskreport" ''
+    set -uo pipefail
+    PATH=${lib.makeBinPath (with pkgs; [
+      coreutils gdu findutils gawk gnugrep gnused
+    ])}:$PATH
+
+    if [ "''${1:-}" = "--gui" ]; then
+      exec ${pkgs.baobab}/bin/baobab "''${2:-$HOME}"
+    fi
+
+    row() { printf '  %-30s %10s\n' "$1" "$2"; }
+    sz() {
+      [ -e "$1" ] || { echo "-"; return; }
+      gdu -n -s -p "$1" 2>/dev/null | awk '{print $1 $2}'
+    }
+
+    echo "Filesystem"
+    df -h / | awk 'NR==2 {printf "  %s used of %s, %s free (%s)\n",
+      $3, $2, $4, $5}'
+
+    echo; echo "Reclaimable buckets"
+    row "Trash" "$(sz "$HOME/.local/share/Trash")"
+    row "~/.cache" "$(sz "$HOME/.cache")"
+    row "~/.minikube" "$(sz "$HOME/.minikube")"
+
+    if docker info >/dev/null 2>&1; then
+      docker system df --format '{{.Type}}\t{{.Reclaimable}}' |
+        while IFS=$'\t' read -r t r; do row "docker $t" "$r"; done
+    else
+      row "docker" "daemon off"
+    fi
+
+    dead=$(nix-store --gc --print-dead 2>/dev/null |
+      xargs -r du -sch 2>/dev/null | tail -1 | cut -f1)
+    row "nix store (dead paths)" "''${dead:-0}"
+    gens=$(ls /nix/var/nix/profiles | grep -c '^system-.*-link$')
+    row "nix system generations" "$gens"
+
+    echo; echo "Biggest in $HOME"
+    gdu -n -p "$HOME" 2>/dev/null | head -12 | sed 's/^/  /'
+
+    echo
+    echo "Drill in: diskreport --gui [path]  |  gdu [path]"
+  '';
 in
 
 {
@@ -81,7 +155,7 @@ in
   users.users.d = {
     isNormalUser = true;
     description = "David Johnson";
-    extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" "disk" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "adbusers" "disk" "kvm" ];
   };
   home-manager = {
     useGlobalPkgs = true;
@@ -258,8 +332,34 @@ in
   #
 
   programs.nix-ld.enable = true;
+
+  # Rancher Desktop ships only an AppImage on Linux; not in nixpkgs
+  # (packaging request NixOS/nixpkgs#196440 was closed as not planned).
+  # The default FHS env ships libpng12; Electron needs libpng16.so.16, so
+  # Rancher Desktop dies at startup with
+  # `libpng16.so.16: cannot open shared object file`. Overriding the package
+  # here (rather than adding one to systemPackages) also covers the binfmt path.
+  programs.appimage = {
+    enable = true;
+    binfmt = true;
+    package = pkgs.appimage-run.override {
+      extraPkgs = pkgs: [ pkgs.libpng ];
+    };
+  };
+
+  # Rancher Desktop runs unprivileged (adminAccess: false), so its port
+  # forwarder cannot bind Traefik's 80/443 and Epinio's ingress is unreachable
+  # from the host. This is a threshold, not a single port: 80 makes everything
+  # from 80 up bindable, 443 included. It must be in place *before* Rancher
+  # Desktop starts — the forwarder claims ports once at startup and never
+  # retries, so setting it afterwards leaves 80/443 unbound until a restart.
+  boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 80;
   users.groups.adbusers = {};
   services.udisks2.enable = true;
+  # GNOME turns gvfs on for you; Hyprland does not. Without it nautilus has
+  # no trash:// backend ("trash locations are not supported"), and `gio`
+  # and network mounts are missing too.
+  services.gvfs.enable = true;
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0660", GROUP="adbusers"
     SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0660", GROUP="adbusers"
@@ -279,14 +379,40 @@ in
     })
 
     (final: prev: {
-      go_1_22 = (import (builtins.fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/24.05.tar.gz";
-        sha256 = "1lr1h35prqkd1mkmzriwlpvxcb34kmhc9dnr48gkm8hh089hifmx";
-      }) {
-        system = final.stdenv.hostPlatform.system;
-      }).go_1_22;
-    })
+      # Stock rpi-imager is unusable here for two unrelated reasons:
+      #   - it refuses to start writing unless geteuid() == 0, even though `d`
+      #     is in group `disk` and removable devices are 0660 root:disk, so the
+      #     real I/O succeeds unprivileged. fakeroot satisfies only the check.
+      #   - its native (portal) file dialog filters to *.img/zip/gz/xz/zst/wic
+      #     and hides *.iso. Only the QML dialog lists iso, and it needs no
+      #     portal, so it also survives being run as root.
+      # Running under sudo cannot work: root has no session portal, so the
+      # native picker comes up empty. This keeps it unprivileged instead.
+      rpi-imager =
+        let
+          # --qml-file-dialogs is a GUI-only option; the --cli parser rejects
+          # it outright, so only pass it when not in CLI mode.
+          launcher = prev.writeShellScript "rpi-imager-launcher" ''
+            imager=${prev.rpi-imager}/bin/rpi-imager
+            fakeroot=${prev.fakeroot}/bin/fakeroot
 
+            case " ''$* " in
+              *" --cli "*) exec "''$fakeroot" "''$imager" "''$@" ;;
+            esac
+
+            exec "''$fakeroot" "''$imager" --qml-file-dialogs "''$@"
+          '';
+        in
+        prev.symlinkJoin {
+          name = "rpi-imager-wrapped-${prev.rpi-imager.version}";
+          paths = [ prev.rpi-imager ];
+
+          postBuild = ''
+            rm "$out/bin/rpi-imager"
+            ln -s ${launcher} "$out/bin/rpi-imager"
+          '';
+        };
+    })
   ];
 
   environment.systemPackages = with pkgs; [
@@ -294,7 +420,7 @@ in
     android-tools
     vim-full
     ripgrep
-    go_1_22
+    go_1_26
     golangci-lint
     protobuf
     openssl
@@ -332,6 +458,7 @@ in
     android-studio
     jdk21
     gnupg
+    pass # Rancher Desktop stores registry credentials here on Linux
     hugo
     freerdp
     gnome-connections
@@ -354,8 +481,14 @@ in
     k6
     openshift
     argocd
+    lazydocker
+    lazydocker-remote
+    diskreport
+    gdu
+    baobab
     lazygit
     gh
+    azure-cli
 
     # Clipboard
     wl-clipboard
@@ -426,6 +559,27 @@ in
   programs._1password-gui = {
     enable = true;
     polkitPolicyOwners = [ "d" ];
+  };
+
+  # rpi-imager 2.x hardcodes /usr/bin/pkexec to elevate before writing, and
+  # passes --disable-internal-agent so it depends on hyprpolkitagent below.
+  systemd.tmpfiles.rules = [
+    "L+ /usr/bin/pkexec - - - - /run/wrappers/bin/pkexec"
+  ];
+
+  # Hyprland ships no polkit authentication agent, so every auth_admin action
+  # (gparted, rpi-imager elevation) failed with no prompt on screen.
+  systemd.user.services.hyprpolkitagent = {
+    description = "Hyprland polkit authentication agent";
+    wantedBy = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+
+    serviceConfig = {
+      ExecStart = "${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent";
+      Restart = "on-failure";
+      RestartSec = 1;
+    };
   };
 
   services.tailscale.enable = true;

@@ -24,8 +24,21 @@ if printf '%s' "$input" | jq -e . >/dev/null 2>&1; then
 fi
 
 # Claude Code's own status line: model, context %, and the live plan meter.
-printf '%s' "$input" | jq -r '
+line=$(printf '%s' "$input" | jq -r '
   "[\(.model.display_name)] \(.context_window.used_percentage // 0)% ctx"
   + (if .rate_limits.five_hour then "  ·  \(.rate_limits.five_hour.used_percentage | floor)% 5h" else "" end)
   + (if .rate_limits.seven_day then "  ·  \(.rate_limits.seven_day.used_percentage | floor)% wk" else "" end)
-'
+')
+
+# llm-skills session segment: mode, project, phase, coding mode. Prints nothing
+# when the repo is absent or the session has no state, so this file stays safe
+# on a machine without llm-skills.
+seg=""
+seg_sh="${LLM_SKILLS_DIR:-$HOME/.claude/llm-skills}/adapters/claude/statusline-segment.sh"
+[ -x "$seg_sh" ] && seg=$("$seg_sh" "$input" 2>/dev/null || true)
+
+if [ -n "$seg" ]; then
+  printf '%s  ·  %s\n' "$line" "$seg"
+else
+  printf '%s\n' "$line"
+fi

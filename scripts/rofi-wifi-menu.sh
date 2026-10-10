@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# Kick off a rescan in the background so the menu shows immediately.
-# Cached results are good enough for the picker; a fresh scan lands for next launch.
-nmcli dev wifi rescan >/dev/null 2>&1 &
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 FIELDS=SSID,SECURITY,BARS
@@ -21,7 +17,14 @@ else
   echo ""
 fi
 
-LIST=$(nmcli --fields "$FIELDS" device wifi list | sed '/^--/d')
+# First open uses cached results so the menu is instant; picking "Rescan"
+# re-execs with RESCAN=yes for a real refresh (~3-5s block).
+if [ "$RESCAN" = "yes" ]; then
+	LIST=$(nmcli --fields "$FIELDS" device wifi list --rescan yes | sed '/^--/d')
+else
+	LIST=$(nmcli --fields "$FIELDS" device wifi list --rescan no | sed '/^--/d')
+fi
+RESCAN_ENTRY="Rescan"
 # For some reason rofi always approximates character width 2 short... hmmm
 RWIDTH=$(($(echo "$LIST" | head -n 1 | awk '{print length($0); }')+2))
 # Dynamically change the height of the rofi menu
@@ -55,13 +58,18 @@ fi
 
 
 HIGHLINE=${HIGHLINE:-0}
-CHENTRY=$(echo -e "$TOGGLE\nmanual\n$LIST" | uniq -u | rofi -dmenu -p "Wi-Fi SSID: " -lines "$LINENUM" -a "$HIGHLINE" -location "$POSITION" -yoffset "$YOFF" -xoffset "$XOFF" -font "$FONT" -width -"$RWIDTH")
+# Bump line count by 1 so the Rescan entry doesn't push the list off screen.
+CHENTRY=$(echo -e "$RESCAN_ENTRY\n$TOGGLE\nmanual\n$LIST" | uniq -u | rofi -dmenu -p "Wi-Fi SSID: " -lines "$((LINENUM + 1))" -a "$HIGHLINE" -location "$POSITION" -yoffset "$YOFF" -xoffset "$XOFF" -font "$FONT" -width -"$RWIDTH")
 
 # Exit if user cancelled
 [[ -z "$CHENTRY" ]] && exit 0
-#echo "$CHENTRY"
+
+# Rescan re-execs this script with RESCAN=yes so the new list is instant on the next open.
+if [ "$CHENTRY" = "$RESCAN_ENTRY" ]; then
+	RESCAN=yes exec "$0" "$@"
+fi
+
 CHSSID=$(echo "$CHENTRY" | sed  's/\s\{2,\}/\|/g' | awk -F "|" '{print $1}')
-#echo "$CHSSID"
 
 # If the user inputs "manual" as their SSID in the start window, it will bring them to this screen
 if [ "$CHENTRY" = "manual" ] ; then

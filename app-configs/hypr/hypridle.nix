@@ -4,6 +4,10 @@
   services.hypridle.settings = {
     general = {
       lock_cmd = "systemctl --user start hyprlock";
+      # s2idle freezes processes in place so hyprlock survives sleep fine.
+      # Keeping it alive means dpms-on on wake only resizes surfaces (safe) rather than
+      # triggering a full output disconnect/reconnect that crashes a freshly-started hyprlock.
+      # systemctl start is idempotent; Restart=on-failure in the hyprlock service handles respawn.
       before_sleep_cmd = "systemctl --user start hyprlock";
       after_sleep_cmd = "sleep 2; hyprctl dispatch dpms on";
     };
@@ -34,7 +38,14 @@
       }
       {
         timeout = 2700;
-        on-timeout = "systemctl suspend";
+        # Desktop uses suspend-then-hibernate: fast s2idle for short cycles, auto-promotes
+        # to S4 after HibernateDelaySec (configured in hosts/desktop/configuration.nix)
+        # so overnight wakes via clean GPU cold-start instead of dead modeset.
+        # ktop stays on plain suspend — its swap is LUKS-encrypted and hibernate needs
+        # separate initrd plumbing not in scope here.
+        on-timeout = if specialArgs.host == "desktop"
+          then "systemctl suspend-then-hibernate"
+          else "systemctl suspend";
       }
     ];
   };
