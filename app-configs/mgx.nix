@@ -2,13 +2,13 @@
 # design/tokens.css and regenerate. Hex values carry no '#'.
 {
   dark = {
-    bg = "090a08";
-    bgRaised = "11130f";
+    bg = "191b17";
+    bgRaised = "21241e";
     ink = "dfe2b8";
     inkDim = "a3a688";
-    inkFaint = "666955";
-    line = "34372c";
-    lineStrong = "6f725d";
+    inkFaint = "74775f";
+    line = "43463a";
+    lineStrong = "7c7f69";
     alert = "ff6a4d";
     warn = "f0c060";
     ok = "9be3a8";

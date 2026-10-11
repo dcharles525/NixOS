@@ -92,12 +92,12 @@ in
       # SLEEP BUTTON BG
       shape {
         monitor =
-        size = 60, 60
+        size = 46, 46
         color = rgba(${mgx.bg}d9)
-        rounding = 0
+        rounding = -1
         border_size = 1
         border_color = rgb(${mgx.ink})
-        position = -50, -300
+        position = -34, -290
         halign = center
         valign = center
       }
@@ -107,9 +107,9 @@ in
         monitor =
         text = 󰒲
         color = rgb(${mgx.ink})
-        font_size = 24
+        font_size = 18
         font_family = Symbols Nerd Font
-        position = -50, -300
+        position = -34, -290
         halign = center
         valign = center
         onclick = systemctl ${if specialArgs.host == "desktop" then "hibernate" else "suspend"}
@@ -118,12 +118,12 @@ in
       # SHUTDOWN BUTTON BG
       shape {
         monitor =
-        size = 60, 60
+        size = 46, 46
         color = rgba(${mgx.bg}d9)
-        rounding = 0
+        rounding = -1
         border_size = 1
         border_color = rgb(${mgx.ink})
-        position = 50, -300
+        position = 34, -290
         halign = center
         valign = center
       }
@@ -133,9 +133,9 @@ in
         monitor =
         text = 󰐥
         color = rgb(${mgx.ink})
-        font_size = 24
+        font_size = 18
         font_family = Symbols Nerd Font
-        position = 50, -300
+        position = 34, -290
         halign = center
         valign = center
         onclick = systemctl poweroff

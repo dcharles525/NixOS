@@ -21,7 +21,7 @@ function DeviceRow({ device }: { device: BluetoothLib.Device }) {
         label={bind(device, "batteryPercentage").as((b) => (b > 0 ? `${Math.round(b * 100)}%` : ""))}
       />
       <button
-        cssClasses={["ep-mute"]}
+        cssClasses={["mpris-btn"]}
         onClicked={() => {
           if (device.connected) device.disconnect_device()
           else device.connect_device()
@@ -50,7 +50,7 @@ function DiscoveredRow({ device }: { device: BluetoothLib.Device }) {
         label={bind(device, "alias").as((a) => a || device.name || device.address)}
       />
       <button
-        cssClasses={["ep-mute"]}
+        cssClasses={["mpris-btn"]}
         onClicked={() => device.pair()}
       >
         <label label="Pair" />

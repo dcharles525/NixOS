@@ -1,16 +1,16 @@
 // MGX palette. Values mirror ../mgx.nix (generated from
 // llm-skills/design/tokens.css); this file is plain scss, so it cannot
 // import the nix attrset. One ink, hairlines, corners square or full.
-$bg: rgba(#090a08, 0.92);
+$bg: rgba(#191b17, 0.94);
 $fg: #dfe2b8;
 $fg-dim: #a3a688;
-$fg-faint: #666955;
+$fg-faint: #74775f;
 $accent: #dfe2b8;
-$accent-soft: #6f725d;
-$ground: #090a08;
+$accent-soft: #7c7f69;
+$ground: #191b17;
 $muted: transparent;
-$muted-hover: #11130f;
-$border-subtle: #34372c;
+$muted-hover: #21241e;
+$border-subtle: #43463a;
 $ok: #9be3a8;
 $info: #8cc8e8;
 $urgent: #ff6a4d;
@@ -86,17 +86,16 @@ $radius: 0;
   font-size: 12px;
 }
 
+// Shared button: a text pill with a hairline outline. Used for the
+// Wi-Fi and Bluetooth actions; the media transport overrides it below.
 .mpris-btn {
   background: transparent;
   color: $fg;
-  border: none;
-  border-radius: 0;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 4px 8px;
-  // Nerd Font glyphs — bump size a touch since they're outline-only vs emoji
-  font-size: 18px;
-  font-family: "Symbols Nerd Font", "JetBrains Mono", sans-serif;
+  border: 1px solid $accent-soft;
+  border-radius: 999px;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 1px 12px;
 }
 .mpris-btn:hover {
   background: $accent;
@@ -108,20 +107,40 @@ $radius: 0;
 
 // Transport controls only; .mpris-btn is shared with popover header buttons.
 .mpris-transport {
-  min-width: 52px;
-  min-height: 52px;
-  padding: 6px 10px;
-  font-size: 28px;
+  border: none;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 2px 6px;
 }
 
 .mpris-play {
   background: transparent;
   border: 1px solid $accent;
   border-radius: 999px;
-  min-width: 64px;
-  min-height: 64px;
-  font-size: 34px;
+  min-width: 40px;
+  min-height: 40px;
 }
+// The glyph is a child <label>, and the `*` rule at the top sets
+// font-size on every node directly, which beats inheritance. Sizes set on
+// the button alone never reach the icon, so set them on the label too.
+.mpris-btn label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.mpris-transport label,
+.ep-mute label {
+  font-size: 18px;
+  letter-spacing: 0;
+  font-family: "Symbols Nerd Font", "JetBrainsMono Nerd Font", sans-serif;
+}
+.mpris-transport label {
+  font-size: 28px;
+}
+.mpris-play label {
+  font-size: 30px;
+}
+
 .mpris-play:hover {
   background: $accent;
   color: $ground;
@@ -132,7 +151,7 @@ $radius: 0;
   background: transparent;
   color: $fg;
   border: none;
-  border-radius: 0;
+  border-radius: 999px;
   min-width: 32px;
   min-height: 32px;
   padding: 2px 6px;

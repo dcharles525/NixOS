@@ -115,7 +115,7 @@ in
       .widget-title > button {
         background: transparent;
         color: #${mgx.ink};
-        border-radius: 0;
+        border-radius: 999px;
         padding: 4px 10px;
         border: 1px solid #${mgx.lineStrong};
       }
@@ -167,7 +167,7 @@ in
       .widget-mpris button {
         background: transparent;
         color: #${mgx.ink};
-        border-radius: 0;
+        border-radius: 999px;
         padding: 4px 8px;
       }
       .widget-mpris button:hover {
@@ -197,10 +197,14 @@ in
         background: transparent;
         color: #${mgx.ink};
         border: 1px solid #${mgx.lineStrong};
-        border-radius: 0;
-        min-height: 48px;
-        min-width: 48px;
-        font-size: 20px;
+        border-radius: 999px;
+        min-height: 34px;
+        min-width: 34px;
+        padding: 0;
+      }
+      /* The `*` rule pins every label to 13px, so size the glyph here. */
+      .widget-buttons-grid > flowbox > flowboxchild > button label {
+        font-size: 16px;
       }
       .widget-buttons-grid > flowbox > flowboxchild > button:hover {
         background: #${mgx.ink};
@@ -233,7 +237,7 @@ in
       .notification-default-action, .notification-action {
         background: transparent;
         color: #${mgx.ink};
-        border-radius: 0;
+        border-radius: 999px;
       }
       .notification-default-action:hover, .notification-action:hover {
         background: #${mgx.bgRaised};
@@ -244,7 +248,7 @@ in
         background: transparent;
         color: #${mgx.ink};
         border: 1px solid #${mgx.lineStrong};
-        border-radius: 0;
+        border-radius: 999px;
         min-width: 15px;
         min-height: 15px;
         padding: 1px 3px;
