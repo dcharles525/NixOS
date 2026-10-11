@@ -1,4 +1,8 @@
 { specialArgs, pkgs, ... }:
+let
+  # MGX palette, generated from llm-skills/design/tokens.css.
+  mgx = (import ../mgx.nix).dark;
+in
 {
   wayland.windowManager.hyprland = {
     enable = true;
@@ -76,21 +80,21 @@
         general = {
           gaps_in     = 5,
           gaps_out    = 10,
-          border_size = 2,
+          border_size = 1,
           col = {
-            active_border   = "rgba(FFD865ee)",
-            inactive_border = "rgba(595959aa)",
+            active_border   = "rgba(${mgx.ink}ff)",
+            inactive_border = "rgba(${mgx.line}ff)",
           },
           resize_on_border = false,
           allow_tearing    = false,
           layout           = "dwindle",
         },
         decoration = {
-          rounding         = 5,
+          rounding         = 0,
           active_opacity   = 1.0,
           inactive_opacity = 1.0,
           shadow = {
-            enabled      = true,
+            enabled      = false,
             range        = 4,
             render_power = 3,
             color        = "rgba(1a1a1aee)",

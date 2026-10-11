@@ -1,4 +1,8 @@
 { config, pkgs, ... }:
+let
+  # MGX palette, generated from llm-skills/design/tokens.css.
+  mgx = (import ./mgx.nix).dark;
+in
 {
   services.dunst = {
     enable = true;
@@ -7,7 +11,7 @@
         browser = "${config.programs.firefox.package}/bin/firefox -new-tab";
         dmenu = "${pkgs.rofi}/bin/rofi -dmenu";
         follow = "mouse";
-        font = "JetBrains Mono 10";
+        font = "Chivo Mono, JetBrainsMono Nerd Font 10";
         format = "<b>%s</b>\\n%b";
         frame_width = 1;
         width = 300;
@@ -22,27 +26,27 @@
         separator_height = 1;
         transparency = 0;
         word_wrap = true;
-        corner_radius = 15;
+        corner_radius = 0;
       };
 
       urgency_low = {
-        background = "#000000a6";
-        foreground = "#4da1af";
-        frame_color = "#4da1af40";
+        background = "#${mgx.bg}e6";
+        foreground = "#${mgx.inkDim}";
+        frame_color = "#${mgx.lineStrong}";
         timeout = 10;
       };
 
       urgency_normal = {
-        background = "#000000a6";
-        foreground = "#70a040";
-        frame_color = "#70a04040";
+        background = "#${mgx.bg}e6";
+        foreground = "#${mgx.ink}";
+        frame_color = "#${mgx.ink}";
         timeout = 15;
       };
 
       urgency_critical = {
-        background = "#00000090";
-        foreground = "#dd5633";
-        frame_color = "#dd5633";
+        background = "#${mgx.bg}";
+        foreground = "#${mgx.alert}";
+        frame_color = "#${mgx.alert}";
         timeout = 0;
       };
 

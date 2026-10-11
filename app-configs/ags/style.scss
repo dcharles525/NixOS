@@ -1,18 +1,24 @@
-// Palette lifted from rofi/waybar/swaync — keeps everything visually consistent.
-$bg: #000000a6;
-$fg: #f2f3f4;
-$accent: #FFC519;
-$accent-soft: rgba(255, 197, 25, 0.35);
-$muted: rgba(255, 255, 255, 0.06);
-$muted-hover: rgba(255, 255, 255, 0.10);
-$border-subtle: #ffffff14;
-$ok: #70a040;
-$info: #4da1af;
-$urgent: #dd5633;
-$radius: 15px;
+// MGX palette. Values mirror ../mgx.nix (generated from
+// llm-skills/design/tokens.css); this file is plain scss, so it cannot
+// import the nix attrset. One ink, hairlines, corners square or full.
+$bg: rgba(#090a08, 0.92);
+$fg: #dfe2b8;
+$fg-dim: #a3a688;
+$fg-faint: #666955;
+$accent: #dfe2b8;
+$accent-soft: #6f725d;
+$ground: #090a08;
+$muted: transparent;
+$muted-hover: #11130f;
+$border-subtle: #34372c;
+$ok: #9be3a8;
+$info: #8cc8e8;
+$urgent: #ff6a4d;
+$radius: 0;
 
 * {
-  font-family: "JetBrains Mono", "Symbols Nerd Font", sans-serif;
+  font-family: "Chivo Mono", "JetBrainsMono Nerd Font", "Symbols Nerd Font",
+    monospace;
   font-size: 13px;
 }
 
@@ -23,37 +29,35 @@ $radius: 15px;
 .popover-body {
   background: $bg;
   color: $fg;
-  // Soft accent-tinted border (not a hard yellow frame) — reads as a
-  // subtle glow rather than window chrome. Matches dunst's aesthetic.
-  border: 1px solid $accent-soft;
-  border-radius: 18px;
+  // Hairline ink frame, square.
+  border: 1px solid $accent;
+  border-radius: 0;
   padding: 16px;
   min-width: 340px;
   max-width: 380px;
-  // Larger, softer shadow gives the "floating overlay" look. Two layers:
-  // a tight lift-shadow + a wider ambient bloom.
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.45),
-    0 12px 40px rgba(0, 0, 0, 0.55);
+  // MGX has no shadows.
+  box-shadow: none;
   margin: 8px;
 }
 
 .popover-title {
   color: $accent;
-  font-weight: bold;
+  font-weight: 300;
   font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .hint {
-  color: rgba(242, 243, 244, 0.55);
+  color: $fg-faint;
   font-size: 11px;
 }
 
 .section-label {
-  color: rgba(242, 243, 244, 0.7);
-  font-size: 12px;
-  font-weight: bold;
+  color: $fg-dim;
+  font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -67,7 +71,7 @@ $radius: 15px;
 .mpris-card {
   background: $muted;
   border: 1px solid $border-subtle;
-  border-radius: 12px;
+  border-radius: 0;
   padding: 10px;
 }
 
@@ -78,8 +82,7 @@ $radius: 15px;
 }
 
 .mpris-artist {
-  color: $fg;
-  opacity: 0.75;
+  color: $fg-dim;
   font-size: 12px;
 }
 
@@ -87,7 +90,7 @@ $radius: 15px;
   background: transparent;
   color: $fg;
   border: none;
-  border-radius: 10px;
+  border-radius: 0;
   min-width: 36px;
   min-height: 36px;
   padding: 4px 8px;
@@ -96,8 +99,8 @@ $radius: 15px;
   font-family: "Symbols Nerd Font", "JetBrains Mono", sans-serif;
 }
 .mpris-btn:hover {
-  background: $muted-hover;
-  color: $accent;
+  background: $accent;
+  color: $ground;
 }
 .mpris-btn:disabled {
   opacity: 0.35;
@@ -112,15 +115,16 @@ $radius: 15px;
 }
 
 .mpris-play {
-  background: $muted-hover;
-  border: 1px solid $accent-soft;
-  border-radius: 14px;
+  background: transparent;
+  border: 1px solid $accent;
+  border-radius: 999px;
   min-width: 64px;
   min-height: 64px;
   font-size: 34px;
 }
 .mpris-play:hover {
-  background: $accent-soft;
+  background: $accent;
+  color: $ground;
 }
 
 // Volume rows
@@ -128,7 +132,7 @@ $radius: 15px;
   background: transparent;
   color: $fg;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   min-width: 32px;
   min-height: 32px;
   padding: 2px 6px;
@@ -136,8 +140,8 @@ $radius: 15px;
   font-family: "Symbols Nerd Font", "JetBrains Mono", sans-serif;
 }
 .ep-mute:hover {
-  background: $muted-hover;
-  color: $accent;
+  background: $accent;
+  color: $ground;
 }
 // When muted the icon shifts to the urgent red so it reads at a glance
 .ep-mute label {
@@ -146,29 +150,29 @@ $radius: 15px;
 
 .ep-slider trough {
   min-height: 6px;
-  background: rgba(255, 255, 255, 0.10);
-  border-radius: 3px;
+  background: $border-subtle;
+  border-radius: 0;
 }
 .ep-slider highlight {
   background: $accent;
-  border-radius: 3px;
+  border-radius: 0;
 }
 .ep-slider slider {
   min-width: 14px;
   min-height: 14px;
   background: $fg;
-  border-radius: 7px;
+  border-radius: 999px;
 }
 
 .ep-pct {
-  color: rgba(242, 243, 244, 0.65);
+  color: $fg-dim;
   font-size: 12px;
 }
 
 // Bluetooth device rows
 .bt-device {
   padding: 6px 4px;
-  border-radius: 8px;
+  border-radius: 0;
 }
 .bt-device:hover {
   background: $muted-hover;
@@ -189,7 +193,7 @@ $radius: 15px;
 
 .wifi-row {
   padding: 6px 4px;
-  border-radius: 8px;
+  border-radius: 0;
 }
 .wifi-row:hover {
   background: $muted-hover;
@@ -200,19 +204,19 @@ $radius: 15px;
   background: transparent;
 }
 .scroll scrollbar slider {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 4px;
+  background: $accent-soft;
+  border-radius: 0;
   min-width: 6px;
 }
 .scroll scrollbar slider:hover {
-  background: rgba(255, 197, 25, 0.4);
+  background: $accent;
 }
 
 entry {
-  background: rgba(0, 0, 0, 0.4);
+  background: transparent;
   color: $fg;
   border: 1px solid $border-subtle;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 4px 8px;
 }
 entry:focus {
@@ -223,7 +227,7 @@ entry:focus {
 .sys-row {
   background: $muted;
   border: 1px solid $border-subtle;
-  border-radius: 12px;
+  border-radius: 0;
   padding: 10px;
 }
 .sys-title {
@@ -231,12 +235,12 @@ entry:focus {
 }
 .sys-bar trough {
   min-height: 6px;
-  background: rgba(255, 255, 255, 0.10);
-  border-radius: 3px;
+  background: $border-subtle;
+  border-radius: 0;
 }
 .sys-bar block.filled {
   background: $accent;
-  border-radius: 3px;
+  border-radius: 0;
 }
 // GtkLevelBar default offsets tag the filled block low (<=25%), high (<=75%),
 // full (>75%). "high" is the middle band, so only full goes red.

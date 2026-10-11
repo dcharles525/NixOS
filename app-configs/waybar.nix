@@ -1,4 +1,8 @@
 { config, pkgs, host, ... }:
+let
+  # MGX palette, generated from llm-skills/design/tokens.css.
+  mgx = (import ./mgx.nix).dark;
+in
 {
   programs.waybar = {
     enable = true;
@@ -199,29 +203,43 @@
         };
       };
     };
+    # MGX: one ink, hairlines, groups as stadium outlines. Corners are
+    # square or fully round, nothing in between.
     style = ''
       * {
-        font-family: "Fira Sans Semibold", FontAwesome, Roboto, Helvetica, Arial, sans-serif;
-        font-size: 15px;
-        transition: background-color .3s ease-out;
+        font-family: "Chivo Mono", "JetBrainsMono Nerd Font", FontAwesome,
+          monospace;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: background-color .12s ease-out, color .12s ease-out;
       }
 
       window#waybar {
         background: transparent;
-        color: #FFC519;
+        color: #${mgx.ink};
         font-family:
+          "Chivo Mono",
           SpaceMono Nerd Font,
           feather;
-        transition: background-color .5s;
+      }
+
+      tooltip {
+        background: #${mgx.bg};
+        border: 1px solid #${mgx.ink};
+        border-radius: 0;
+      }
+      tooltip label {
+        color: #${mgx.ink};
       }
 
       .modules-left,
       .modules-center,
       .modules-right {
-        background: rgba(0, 0, 0, 0.65);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: alpha(#${mgx.bg}, 0.86);
+        border: 1px solid #${mgx.lineStrong};
         margin: 5px 5px;
-        border-radius: 15px;
+        border-radius: 999px;
       }
 
       .modules-left {
@@ -257,9 +275,10 @@
       #mpris,
       #mpd {
         padding: 2px 10px;
-        border-radius: 15px;
+        border-radius: 999px;
       }
 
+      /* Hover inverts: ink ground, black text. */
       #clock:hover,
       #battery:hover,
       #bluetooth:hover,
@@ -283,7 +302,8 @@
       #custom-claude:hover,
       #mpris:hover,
       #mpd:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: #${mgx.ink};
+        color: #${mgx.bg};
       }
 
       #custom-claude.stale {
@@ -291,35 +311,60 @@
       }
 
       #mpris.playing {
-        color: #FFC519;
+        color: #${mgx.ink};
       }
       #mpris.paused {
-        opacity: 0.6;
+        color: #${mgx.inkDim};
       }
 
+      /* Hue is for status only. */
+      #battery.warning,
+      #cpu.warning {
+        color: #${mgx.warn};
+      }
+      #battery.critical,
+      #cpu.critical,
+      #network.disconnected,
+      #custom-poweroff:hover {
+        color: #${mgx.alert};
+      }
+      #custom-poweroff:hover {
+        background: transparent;
+      }
+      #pulseaudio.muted,
+      #bluetooth.off,
+      #bluetooth.disabled {
+        color: #${mgx.inkFaint};
+      }
 
       #workspaces button {
         background: transparent;
         font-family:
+          "Chivo Mono",
           SpaceMono Nerd Font,
           feather;
-        font-weight: 900;
-        font-size: 13pt;
-        color: #FFC519;
+        font-weight: 500;
+        font-size: 11pt;
+        color: #${mgx.inkDim};
         border: none;
-        border-radius: 15px;
+        border-radius: 999px;
         padding: 0 7px;
         min-width: 20px;
       }
 
       #workspaces button.active {
-        background: rgba(255, 255, 255, 0.1);
+        background: #${mgx.ink};
+        color: #${mgx.bg};
       }
 
       #workspaces button:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #FFC519;
-        box-shadow: none;
+        background: transparent;
+        color: #${mgx.ink};
+        box-shadow: inset 0 0 0 1px #${mgx.ink};
+      }
+
+      #workspaces button.urgent {
+        color: #${mgx.alert};
       }
 
     '';

@@ -1,4 +1,8 @@
 { config, pkgs, ... }:
+let
+  # MGX palette, generated from llm-skills/design/tokens.css.
+  mgx = (import ./mgx.nix).dark;
+in
 {
   services.swaync = {
     enable = true;
@@ -82,104 +86,107 @@
       };
     };
 
-    # Palette lifted 1:1 from rofi/waybar/dunst:
-    #   bg          #000000a6  (translucent black, matches rofi window)
-    #   fg          #f2f3f4    (near-white text)
-    #   accent      #FFC519    (rofi border, waybar highlight)
-    #   ok/normal   #70a040    (dunst normal urgency)
-    #   info/low    #4da1af    (dunst low urgency)
-    #   urgent      #dd5633    (dunst critical urgency)
-    # 15px corner radius everywhere, 1px solid accent border on the shell.
+    # MGX: one ink on black, 1px hairlines, corners square or fully
+    # round. Hover inverts. Hue only for urgency.
     style = ''
       * {
-        font-family: "JetBrains Mono", "Symbols Nerd Font", sans-serif;
+        font-family: "Chivo Mono", "JetBrainsMono Nerd Font",
+          "Symbols Nerd Font", monospace;
         font-size: 13px;
         border: none;
         box-shadow: none;
       }
 
       .control-center {
-        background: #000000a6;
-        border: 1px solid #FFC519;
-        border-radius: 15px;
+        background: alpha(#${mgx.bg}, 0.92);
+        border: 1px solid #${mgx.ink};
+        border-radius: 0;
         padding: 12px;
         margin: 8px;
-        color: #f2f3f4;
+        color: #${mgx.ink};
       }
 
       .widget-title > label {
-        color: #f2f3f4;
+        color: #${mgx.ink};
         font-size: 15px;
-        font-weight: bold;
+        font-weight: 300;
+        letter-spacing: 1px;
       }
       .widget-title > button {
-        background: rgba(255, 255, 255, 0.06);
-        color: #f2f3f4;
-        border-radius: 10px;
+        background: transparent;
+        color: #${mgx.ink};
+        border-radius: 0;
         padding: 4px 10px;
-        border: 1px solid #ffffff14;
+        border: 1px solid #${mgx.lineStrong};
       }
       .widget-title > button:hover {
-        background: rgba(255, 255, 255, 0.10);
-        color: #FFC519;
-        border-color: #FFC519;
+        background: #${mgx.ink};
+        color: #${mgx.bg};
+        border-color: #${mgx.ink};
       }
 
       .widget-dnd {
         margin: 8px 0;
-        color: #f2f3f4;
+        color: #${mgx.ink};
       }
       .widget-dnd > switch {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        border: 1px solid #ffffff14;
+        background: transparent;
+        border-radius: 999px;
+        border: 1px solid #${mgx.lineStrong};
+      }
+      .widget-dnd > switch slider {
+        background: #${mgx.ink};
+        border-radius: 999px;
       }
       .widget-dnd > switch:checked {
-        background: #dd5633;
-        border-color: #dd5633;
+        background: #${mgx.alert};
+        border-color: #${mgx.alert};
+      }
+      .widget-dnd > switch:checked slider {
+        background: #${mgx.bg};
       }
 
       .widget-mpris {
-        color: #f2f3f4;
+        color: #${mgx.ink};
         margin: 8px 0;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid #ffffff14;
-        border-radius: 12px;
+        background: transparent;
+        border: 1px solid #${mgx.line};
+        border-radius: 0;
         padding: 8px;
       }
       .widget-mpris-player {
         padding: 4px;
       }
       .widget-mpris-title {
-        font-weight: bold;
-        color: #FFC519;
+        font-weight: 600;
+        color: #${mgx.ink};
       }
       .widget-mpris-subtitle {
-        opacity: 0.75;
+        color: #${mgx.inkDim};
       }
       .widget-mpris button {
         background: transparent;
-        color: #f2f3f4;
-        border-radius: 8px;
+        color: #${mgx.ink};
+        border-radius: 0;
         padding: 4px 8px;
       }
       .widget-mpris button:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #FFC519;
+        background: #${mgx.ink};
+        color: #${mgx.bg};
       }
 
       .widget-volume {
         margin: 8px 0;
-        color: #f2f3f4;
+        color: #${mgx.ink};
       }
       .widget-volume trough {
-        min-height: 8px;
-        background: rgba(255, 255, 255, 0.10);
-        border-radius: 4px;
+        min-height: 6px;
+        background: #${mgx.line};
+        border-radius: 0;
       }
       .widget-volume highlight {
-        background: #FFC519;
-        border-radius: 4px;
+        background: #${mgx.ink};
+        border-radius: 0;
       }
 
       .widget-buttons-grid {
@@ -187,18 +194,18 @@
         padding: 4px;
       }
       .widget-buttons-grid > flowbox > flowboxchild > button {
-        background: rgba(255, 255, 255, 0.06);
-        color: #f2f3f4;
-        border: 1px solid #ffffff14;
-        border-radius: 12px;
+        background: transparent;
+        color: #${mgx.ink};
+        border: 1px solid #${mgx.lineStrong};
+        border-radius: 0;
         min-height: 48px;
         min-width: 48px;
         font-size: 20px;
       }
       .widget-buttons-grid > flowbox > flowboxchild > button:hover {
-        background: rgba(255, 255, 255, 0.10);
-        color: #FFC519;
-        border-color: #FFC519;
+        background: #${mgx.ink};
+        color: #${mgx.bg};
+        border-color: #${mgx.ink};
       }
 
       .notification-row {
@@ -206,34 +213,38 @@
         margin: 6px 0;
       }
       .notification {
-        background: rgba(0, 0, 0, 0.65);
-        border-radius: 15px;
+        background: alpha(#${mgx.bg}, 0.9);
+        border: 1px solid #${mgx.line};
+        border-radius: 0;
         margin: 0;
         padding: 0;
       }
       .notification-content {
         padding: 10px;
-        color: #f2f3f4;
+        color: #${mgx.ink};
       }
-      .notification.low      { border-left: 3px solid #4da1af; }
-      .notification.normal   { border-left: 3px solid #70a040; }
-      .notification.critical { border-left: 3px solid #dd5633; background: rgba(0, 0, 0, 0.85); }
+      .notification.low      { border-left: 3px solid #${mgx.inkFaint}; }
+      .notification.normal   { border-left: 3px solid #${mgx.ink}; }
+      .notification.critical {
+        border-left: 3px solid #${mgx.alert};
+        background: #${mgx.bg};
+      }
 
       .notification-default-action, .notification-action {
         background: transparent;
-        color: #f2f3f4;
-        border-radius: 10px;
+        color: #${mgx.ink};
+        border-radius: 0;
       }
       .notification-default-action:hover, .notification-action:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #FFC519;
+        background: #${mgx.bgRaised};
+        color: #${mgx.ink};
       }
 
       .close-button {
-        background: rgba(255, 255, 255, 0.06);
-        color: #f2f3f4;
-        border: none;
-        border-radius: 8px;
+        background: transparent;
+        color: #${mgx.ink};
+        border: 1px solid #${mgx.lineStrong};
+        border-radius: 0;
         min-width: 15px;
         min-height: 15px;
         padding: 1px 3px;
@@ -241,15 +252,16 @@
         margin-top: 12px;
       }
       .close-button:hover {
-        background: #dd5633;
-        color: #f2f3f4;
+        background: #${mgx.alert};
+        border-color: #${mgx.alert};
+        color: #${mgx.bg};
       }
 
       /* Toast (floating) notifications outside the control center */
       .floating-notifications .notification {
-        background: #000000a6;
-        border: 1px solid #FFC519;
-        border-radius: 15px;
+        background: alpha(#${mgx.bg}, 0.92);
+        border: 1px solid #${mgx.ink};
+        border-radius: 0;
         margin: 6px 10px;
       }
     '';

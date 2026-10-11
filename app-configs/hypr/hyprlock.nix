@@ -1,5 +1,7 @@
 { pkgs, specialArgs, ... }:
 let
+  # MGX palette, generated from llm-skills/design/tokens.css.
+  mgx = (import ../mgx.nix).dark;
   background = builtins.path { path = ../../assets/background.jpg; name = "background.jpg"; };
   # nixpkgs hyprlock (v0.9.6) patched to survive TC1/Thunderbolt link-training
   # output removal during an active session lock. See hyprlock-tc1.patch for
@@ -44,17 +46,19 @@ in
       input-field {
           monitor =
           size = 350, 60
-          outline_thickness = 0
+          # MGX: a stadium outline, ink dots on black.
+          outline_thickness = 1
           dots_size = 0.2
           dots_spacing = 0.35
           dots_center = true
-          outer_color = rgba(255, 255, 255, 0.15)
-          inner_color = rgba(255, 255, 255, 0.1)
-          font_color = rgba(255,255,255,1)
+          outer_color = rgb(${mgx.ink})
+          inner_color = rgba(${mgx.bg}d9)
+          font_color = rgb(${mgx.ink})
           fade_on_empty = false
-          rounding = 15
-          check_color = rgb(204, 136, 34)
-          placeholder_text = <i><span foreground="##cdd6f4">Input Password...</span></i>
+          rounding = -1
+          check_color = rgb(${mgx.warn})
+          fail_color = rgb(${mgx.alert})
+          placeholder_text = <span foreground="##${mgx.inkDim}">INPUT : PASSWORD_</span>
           hide_input = false
           position = 0, -200
           halign = center
@@ -64,10 +68,10 @@ in
       # DATE
       label {
         monitor =
-        text = cmd[update:1000] echo "$(date +"%A, %B %d")"
-        color = rgba(242, 243, 244, 0.75)
-        font_size = 22
-        font_family = JetBrains Mono
+        text = cmd[update:1000] echo "$(date +"%A // %B %d" | tr a-z A-Z)"
+        color = rgb(${mgx.inkDim})
+        font_size = 16
+        font_family = JetBrainsMono Nerd Font
         position = 0, 300
         halign = center
         valign = center
@@ -77,9 +81,9 @@ in
       label {
         monitor =
         text = cmd[update:1000] echo "$(date +"%-I:%M")"
-        color = rgba(242, 243, 244, 0.75)
-        font_size = 95
-        font_family = JetBrains Mono Extrabold
+        color = rgb(${mgx.ink})
+        font_size = 110
+        font_family = JetBrainsMono Nerd Font ExtraLight
         position = 0, 200
         halign = center
         valign = center
@@ -89,10 +93,10 @@ in
       shape {
         monitor =
         size = 60, 60
-        color = rgba(255, 255, 255, 0.1)
-        rounding = 15
+        color = rgba(${mgx.bg}d9)
+        rounding = 0
         border_size = 1
-        border_color = rgba(255, 255, 255, 0.15)
+        border_color = rgb(${mgx.ink})
         position = -50, -300
         halign = center
         valign = center
@@ -102,7 +106,7 @@ in
       label {
         monitor =
         text = 󰒲
-        color = rgba(242, 243, 244, 0.75)
+        color = rgb(${mgx.ink})
         font_size = 24
         font_family = Symbols Nerd Font
         position = -50, -300
@@ -115,10 +119,10 @@ in
       shape {
         monitor =
         size = 60, 60
-        color = rgba(255, 255, 255, 0.1)
-        rounding = 15
+        color = rgba(${mgx.bg}d9)
+        rounding = 0
         border_size = 1
-        border_color = rgba(255, 255, 255, 0.15)
+        border_color = rgb(${mgx.ink})
         position = 50, -300
         halign = center
         valign = center
@@ -128,7 +132,7 @@ in
       label {
         monitor =
         text = 󰐥
-        color = rgba(242, 243, 244, 0.75)
+        color = rgb(${mgx.ink})
         font_size = 24
         font_family = Symbols Nerd Font
         position = 50, -300

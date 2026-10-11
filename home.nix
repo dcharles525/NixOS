@@ -1,5 +1,9 @@
 { config, pkgs, ... }:
 
+let
+  # MGX palette, generated from llm-skills/design/tokens.css.
+  mgx = (import ./app-configs/mgx.nix).dark;
+in
 {
   imports = [
     ./app-configs/hypr/hyprland.nix
@@ -42,39 +46,39 @@
       highlight: bold italic;
       scrollbar: false;
 
-      background:                  #000000a6;
+      background:                  #${mgx.bg}e6;
       background-color:            transparent;
-      foreground:                  #f2f3f4;
-      border-color:                #FFC519;
-      separatorcolor:              #ffffff14;
+      foreground:                  #${mgx.ink};
+      border-color:                #${mgx.ink};
+      separatorcolor:              #${mgx.line};
 
       normal-background:           transparent;
       normal-foreground:           @foreground;
       alternate-normal-background: transparent;
       alternate-normal-foreground: @foreground;
-      selected-normal-background:  #ffffff1a;
-      selected-normal-foreground:  #FFC519;
+      selected-normal-background:  #${mgx.ink};
+      selected-normal-foreground:  #${mgx.bg};
 
-      active-background:           #ffffff1a;
-      active-foreground:           #FFC519;
+      active-background:           transparent;
+      active-foreground:           #${mgx.cat2};
       alternate-active-background: @active-background;
       alternate-active-foreground: @active-foreground;
-      selected-active-background:  #ffffff26;
-      selected-active-foreground:  #FFC519;
+      selected-active-background:  #${mgx.ink};
+      selected-active-foreground:  #${mgx.bg};
 
-      urgent-background:           #dd563340;
-      urgent-foreground:           #dd5633;
+      urgent-background:           transparent;
+      urgent-foreground:           #${mgx.alert};
       alternate-urgent-background: @urgent-background;
       alternate-urgent-foreground: @urgent-foreground;
-      selected-urgent-background:  #dd563366;
-      selected-urgent-foreground:  #dd5633;
+      selected-urgent-background:  #${mgx.alert};
+      selected-urgent-foreground:  #${mgx.bg};
     }
 
     window {
       background-color: @background;
       border:           1px;
       border-color:     @border-color;
-      border-radius:    15px;
+      border-radius:    0;
       padding:          10px;
       width:            500px;
     }
@@ -107,7 +111,7 @@
     element {
       border:        0;
       padding:       6px 8px;
-      border-radius: 10px;
+      border-radius: 0;
     }
 
     element.normal.normal {
@@ -158,7 +162,7 @@
     scrollbar {
       width:        4px;
       border:       0;
-      handle-color: #ffffff26;
+      handle-color: #${mgx.lineStrong};
       handle-width: 8px;
       padding:      0;
     }
@@ -167,8 +171,10 @@
       spacing:          0;
       text-color:       @normal-foreground;
       padding:          8px;
-      background-color: #ffffff0d;
-      border-radius:    10px;
+      background-color: transparent;
+      border:           0 0 1px;
+      border-color:     #${mgx.inkDim};
+      border-radius:    0;
       children:         [ prompt, textbox-prompt-sep, entry, case-indicator ];
     }
 
@@ -256,19 +262,19 @@
     };
     # Libadwaita apps (overskride, iwgtk, pwvucontrol, etc.) ignore
     # gtk4.theme and use their own stylesheet. Override the named accent
-    # tokens so they match the rofi/waybar yellow-on-black aesthetic.
+    # tokens so they match the MGX one-ink look of rofi and waybar.
     gtk4.extraCss = ''
-      @define-color accent_color #FFC519;
-      @define-color accent_bg_color #FFC519;
-      @define-color accent_fg_color #000000;
+      @define-color accent_color #${mgx.ink};
+      @define-color accent_bg_color #${mgx.ink};
+      @define-color accent_fg_color #${mgx.bg};
 
-      @define-color destructive_color #dd5633;
-      @define-color destructive_bg_color #dd5633;
-      @define-color destructive_fg_color #000000;
+      @define-color destructive_color #${mgx.alert};
+      @define-color destructive_bg_color #${mgx.alert};
+      @define-color destructive_fg_color #${mgx.bg};
 
-      @define-color success_color #70a040;
-      @define-color warning_color #FFC519;
-      @define-color error_color   #dd5633;
+      @define-color success_color #${mgx.ok};
+      @define-color warning_color #${mgx.warn};
+      @define-color error_color   #${mgx.alert};
     '';
   };
 
