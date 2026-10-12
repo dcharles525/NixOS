@@ -1,4 +1,16 @@
 { config, pkgs, lib, inputs, ... }:
+let
+  # hwmon pwm files are root-only. Hand the duty and mode files to wheel so
+  # the AGS System popover can drive the fans without a root helper.
+  fanPwmPerms = pkgs.writeShellScript "fan-pwm-perms" ''
+    cd "$1" || exit 0
+    for f in pwm[0-9] pwm[0-9]_enable; do
+      [ -e "$f" ] || continue
+      ${pkgs.coreutils}/bin/chgrp wheel "$f"
+      ${pkgs.coreutils}/bin/chmod g+w "$f"
+    done
+  '';
+in
 {
   #
   # Config Setup
@@ -65,8 +77,34 @@
     ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:03:00.0", ATTR{power/wakeup}="disabled"
     ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:00:1c.2", ATTR{power/wakeup}="disabled"
     ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:00:1c.0", ATTR{power/wakeup}="disabled"
+    ACTION=="add", SUBSYSTEM=="hwmon", ATTR{name}=="it8*", \
+      RUN+="${fanPwmPerms} /sys%p"
   '';
 
+
+  # Fan control. The board's ITE Super I/O has no in-tree driver, so load
+  # the out-of-tree it87. Gigabyte firmware claims the chip's I/O range in
+  # ACPI, hence ignore_resource_conflict. Controls live in the AGS System
+  # popover (app-configs/ags/widget/System.tsx).
+  # nixpkgs pins it87 at 2025-12-26. On this board that build takes pwm
+  # writes and the chip ignores them; manual control on Gigabyte IT8689E
+  # landed upstream 2026-08-24 (frankcrawford/it87 PR 128). Drop the
+  # override once nixpkgs passes that date.
+  boot.extraModulePackages = [
+    (config.boot.kernelPackages.it87.overrideAttrs (_: {
+      version = "unstable-2026-10-02";
+      src = pkgs.fetchFromGitHub {
+        owner = "frankcrawford";
+        repo = "it87";
+        rev = "bd7a566c8a60fe0308d67e26761e16260368191a";
+        hash = "sha256-Xh882j0YK9RF+YqMoP7JydbSLmotxqMTUqF1pjZ6CVE=";
+      };
+    }))
+  ];
+  boot.kernelModules = [ "it87" ];
+  boot.extraModprobeConfig = ''
+    options it87 ignore_resource_conflict=1
+  '';
 
   virtualisation.docker.enable = true;
   virtualisation.docker.daemon.settings = {

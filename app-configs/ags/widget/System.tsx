@@ -1,12 +1,16 @@
 import { App, Astal, Gdk, Gtk } from "astal/gtk4"
 import GLib from "gi://GLib"
-import { Variable, exec } from "astal"
+import { Variable, exec, execAsync, interval } from "astal"
 import { readFile } from "astal/file"
 
 // System popover: CPU, RAM, GPU, disk in one place so the bar only carries
 // a single "computer" module. Everything comes from /proc and /sys except
 // GPU (nvidia-smi, desktop only) and disk usage (df). Polling only runs
 // while a System window is visible; the bar module has its own cheap poll.
+//
+// Fans: every hwmon pwmN with a matching fanN_input gets a row. On the
+// desktop that is the board's ITE Super I/O (out-of-tree it87 module, see
+// hosts/desktop/configuration.nix). Hosts with no PWM driver get no card.
 
 interface Stats {
   cpu: number        // 0-1
@@ -16,11 +20,74 @@ interface Stats {
   memTotal: number
   swapUsed: number
   swapTotal: number
-  gpu: { util: number; memUsed: number; memTotal: number; temp: number; name: string } | null
+  gpu: {
+    util: number
+    memUsed: number
+    memTotal: number
+    temp: number
+    fan: number      // 0-1, the card's own fan; read-only on Wayland
+    name: string
+  } | null
   diskUsed: number
   diskTotal: number
   diskBusy: number   // 0-1, fraction of interval the root device was busy
+  fans: Fan[]
 }
+
+interface FanCh {
+  id: string         // "hwmon5/pwm2"
+  n: string          // channel number within the chip
+  base: string       // /sys/class/hwmon/hwmon5
+  chip: string       // hwmon name, e.g. it8689
+  writable: boolean  // udev hands pwmN and pwmN_enable to group wheel
+}
+
+interface Fan {
+  id: string
+  rpm: number
+  duty: number       // 0-1
+  auto: boolean      // false only when pwmN_enable is 1 (manual)
+}
+
+// pwmN_enable values: 1 = manual duty, 2 = the chip's own curve, which is
+// whatever Smart Fan is set to in the BIOS.
+const PWM_MANUAL = 1
+const PWM_AUTO = 2
+// Lowest duty the slider offers. Nothing here knows which header is the CPU
+// cooler, so no channel can be dragged to a stop.
+const FAN_FLOOR = 0.2
+// Manual duties are fixed, not a curve. Past this CPU temp every manual
+// channel goes back to auto, popover open or not.
+const FAILSAFE_C = 85
+
+const FANS: FanCh[] = (() => {
+  try {
+    return exec([
+      "sh",
+      "-c",
+      "ls -d /sys/class/hwmon/hwmon*/pwm[0-9] 2>/dev/null || true",
+    ])
+      .split("\n")
+      .filter(Boolean)
+      .map((pwm) => {
+        const base = pwm.replace(/\/pwm\d$/, "")
+        const n = pwm.slice(-1)
+        return {
+          id: `${base.split("/").pop()}/pwm${n}`,
+          n,
+          base,
+          chip: readFile(`${base}/name`).trim(),
+          writable:
+            GLib.access(pwm, 2 /* W_OK */) === 0 &&
+            GLib.access(`${pwm}_enable`, 2) === 0,
+        }
+      })
+      .filter((f) =>
+        GLib.file_test(`${f.base}/fan${f.n}_input`, GLib.FileTest.EXISTS))
+  } catch {
+    return []
+  }
+})()
 
 const HAS_NVIDIA = GLib.find_program_in_path("nvidia-smi") !== null
 
@@ -48,13 +115,57 @@ function readCpu(): number {
   return dTotal > 0 ? 1 - dIdle / dTotal : 0
 }
 
-function readCpuTemp(): number {
+function readCpuTempC(): number {
   try {
-    const c = parseInt(exec(["sh", "-c", "cat /sys/devices/platform/coretemp.0/hwmon/hwmon*/temp1_input"]), 10) / 1000
-    return Math.round(c * 9 / 5 + 32)
+    const hwmon = "/sys/devices/platform/coretemp.0/hwmon"
+    const raw = exec(["sh", "-c", `cat ${hwmon}/hwmon*/temp1_input`])
+    return parseInt(raw, 10) / 1000 || 0
   } catch {
     return 0
   }
+}
+
+function readCpuTemp(): number {
+  const c = readCpuTempC()
+  return c ? toF(c) : 0
+}
+
+function toF(c: number): number {
+  return Math.round(c * 9 / 5 + 32)
+}
+
+function num(path: string): number {
+  return parseInt(readFile(path), 10) || 0
+}
+
+function readFans(): Fan[] {
+  return FANS.map((f) => ({
+    id: f.id,
+    rpm: num(`${f.base}/fan${f.n}_input`),
+    duty: num(`${f.base}/pwm${f.n}`) / 255,
+    auto: num(`${f.base}/pwm${f.n}_enable`) !== PWM_MANUAL,
+  }))
+}
+
+// Mode first, then duty: it87 answers EBUSY to a duty write in auto mode.
+// The stats Variable is patched in place so the slider does not snap back
+// to the old value while the next poll is still up to 2s away.
+function fanWrite(f: FanCh, mode: number, duty?: number) {
+  const pwm = `${f.base}/pwm${f.n}`
+  let cmd = `echo ${mode} > ${pwm}_enable`
+  if (duty !== undefined) {
+    duty = Math.min(1, Math.max(FAN_FLOOR, duty))
+    cmd += ` && echo ${Math.round(duty * 255)} > ${pwm}`
+  }
+  execAsync(["sh", "-c", cmd]).catch(console.error)
+  const s = stats.get()
+  stats.set({
+    ...s,
+    fans: s.fans.map((x) =>
+      x.id === f.id
+        ? { ...x, auto: mode !== PWM_MANUAL, duty: duty ?? x.duty }
+        : x),
+  })
 }
 
 function readMem() {
@@ -74,16 +185,19 @@ function readMem() {
 function readGpu(): Stats["gpu"] {
   if (!HAS_NVIDIA) return null
   try {
-    const [util, used, total, temp, ...name] = exec([
+    const fields = "utilization.gpu,memory.used,memory.total," +
+      "temperature.gpu,fan.speed,name"
+    const [util, used, total, temp, fan, ...name] = exec([
       "nvidia-smi",
-      "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,name",
+      `--query-gpu=${fields}`,
       "--format=csv,noheader,nounits",
     ]).split(",").map((s) => s.trim())
     return {
       util: Number(util) / 100,
       memUsed: Number(used) * 1024 * 1024,
       memTotal: Number(total) * 1024 * 1024,
-      temp: Math.round(Number(temp) * 9 / 5 + 32),
+      temp: toF(Number(temp)),
+      fan: Number(fan) / 100 || 0,
       name: name.join(",").replace(/^NVIDIA\s+/, ""),
     }
   } catch {
@@ -118,11 +232,28 @@ function sample(): Stats {
     ...readMem(),
     gpu: readGpu(),
     ...readDisk(),
+    fans: readFans(),
   }
 }
 
 const stats = Variable<Stats>(sample()).poll(2000, sample)
 stats.stopPoll()
+
+if (FANS.some((f) => f.writable)) {
+  interval(10_000, () => {
+    const manual = FANS.filter((f) =>
+      f.writable && num(`${f.base}/pwm${f.n}_enable`) === PWM_MANUAL)
+    if (!manual.length || readCpuTempC() < FAILSAFE_C) return
+    manual.forEach((f) => fanWrite(f, PWM_AUTO))
+    execAsync([
+      "notify-send",
+      "-u",
+      "critical",
+      "Fans back on auto",
+      `CPU passed ${toF(FAILSAFE_C)}°F on a manual fan duty`,
+    ]).catch(() => {})
+  })
+}
 
 function gb(bytes: number): string {
   return `${(bytes / 1024 ** 3).toFixed(1)}G`
@@ -147,6 +278,75 @@ function Meter({ icon, title, value, detail }: {
       </box>
       <levelbar cssClasses={["sys-bar"]} minValue={0} maxValue={1} value={stats((s) => value(s))} />
       <label cssClasses={["hint"]} label={stats((s) => detail(s))} xalign={0} />
+    </box>
+  )
+}
+
+function FanRow({ fan }: { fan: FanCh }) {
+  const me = (s: Stats) => s.fans.find((x) => x.id === fan.id)
+  return (
+    <box orientation={Gtk.Orientation.VERTICAL} spacing={2}>
+      <box orientation={Gtk.Orientation.HORIZONTAL} spacing={8}>
+        <label label={`Fan ${fan.n}`} xalign={0} />
+        <label
+          cssClasses={["ep-pct"]}
+          label={stats((s) => `${me(s)?.rpm ?? 0} rpm`)}
+          xalign={0}
+          hexpand
+        />
+        <button
+          cssClasses={["mpris-btn"]}
+          sensitive={fan.writable}
+          onClicked={() => {
+            const f = me(stats.get())
+            if (!f) return
+            if (f.auto) fanWrite(fan, PWM_MANUAL, f.duty)
+            else fanWrite(fan, PWM_AUTO)
+          }}
+        >
+          <label label={stats((s) => (me(s)?.auto ? "Auto" : "Manual"))} />
+        </button>
+      </box>
+      <box orientation={Gtk.Orientation.HORIZONTAL} spacing={8}>
+        <slider
+          cssClasses={["ep-slider"]}
+          hexpand
+          min={FAN_FLOOR}
+          max={1}
+          step={0.01}
+          sensitive={stats((s) => fan.writable && !(me(s)?.auto ?? true))}
+          value={stats((s) => me(s)?.duty ?? 0)}
+          onChangeValue={({ value }) => fanWrite(fan, PWM_MANUAL, value)}
+        />
+        <label
+          cssClasses={["ep-pct"]}
+          widthChars={4}
+          xalign={1}
+          label={stats((s) => pct(me(s)?.duty ?? 0))}
+        />
+      </box>
+    </box>
+  )
+}
+
+function Fans() {
+  const chips = [...new Set(FANS.map((f) => f.chip))].join(" ")
+  const hint = FANS.some((f) => f.writable)
+    ? `manual floor ${pct(FAN_FLOOR)} · auto again at ${toF(FAILSAFE_C)}°F`
+    : "read-only: no write access to pwm"
+  return (
+    <box
+      cssClasses={["sys-row"]}
+      orientation={Gtk.Orientation.VERTICAL}
+      spacing={8}
+    >
+      <box orientation={Gtk.Orientation.HORIZONTAL} spacing={8}>
+        <label cssClasses={["wifi-icon-inline"]} label="󰈐" />
+        <label cssClasses={["sys-title"]} label="Fans" xalign={0} hexpand />
+        <label cssClasses={["ep-pct"]} label={chips} />
+      </box>
+      {FANS.map((f) => <FanRow fan={f} />)}
+      <label cssClasses={["hint"]} label={hint} xalign={0} />
     </box>
   )
 }
@@ -209,7 +409,9 @@ export default function System(monitor: Gdk.Monitor) {
             value={(s) => s.gpu?.util ?? 0}
             detail={(s) =>
               s.gpu
-                ? `${s.gpu.name} · ${gb(s.gpu.memUsed)} / ${gb(s.gpu.memTotal)} · ${s.gpu.temp}°F`
+                ? `${s.gpu.name} · ${gb(s.gpu.memUsed)} / ` +
+                  `${gb(s.gpu.memTotal)} · ${s.gpu.temp}°F · ` +
+                  `fan ${pct(s.gpu.fan)}`
                 : "nvidia-smi unavailable"}
           />
         )}
@@ -219,6 +421,8 @@ export default function System(monitor: Gdk.Monitor) {
           value={(s) => (s.diskTotal ? s.diskUsed / s.diskTotal : 0)}
           detail={(s) => `${gb(s.diskUsed)} / ${gb(s.diskTotal)} used · ${pct(s.diskBusy)} busy (${ROOT_DEV})`}
         />
+
+        {FANS.length > 0 && <Fans />}
 
         <label cssClasses={["hint"]} label="Esc closes" xalign={1} />
       </box>
