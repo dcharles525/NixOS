@@ -89,6 +89,7 @@ in
     ./hardware-configuration.nix
     ./../../app-configs/vim.nix
     ./../../app-configs/tmux.nix
+    (import ./../../app-configs/sddm { sleep = "suspend"; })
     inputs.home-manager.nixosModules.default
   ];
 
@@ -222,7 +223,6 @@ in
   services.fwupd.enable = true;
   # Optimize upower to not slow boot
   services.upower.noPollBatteries = false;
-  services.displayManager.ly.enable = true;
 
   hardware.graphics = {
     enable = true;

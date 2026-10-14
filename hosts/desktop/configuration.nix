@@ -20,6 +20,7 @@ in
     ./hardware-configuration.nix
     ./../../app-configs/vim.nix
     ./../../app-configs/tmux.nix
+    (import ./../../app-configs/sddm { sleep = "hibernate"; })
     inputs.home-manager.nixosModules.default
   ];
   nixpkgs = {
@@ -234,7 +235,6 @@ in
   # Display and DE Enablement
   #
 
-  services.displayManager.ly.enable = true;
   services.xserver.enable = true;
   services.xserver.xkb = {
     layout = "us";
@@ -434,6 +434,10 @@ in
     }];
     packages = [
       "com.adamcake.Bolt"
+      # Flathub build, not nixpkgs: the proprietary network plugin it
+      # downloads expects an FHS runtime, and nixpkgs builds it from source
+      # (unfree, never cached). X11-only sandbox, so it runs under XWayland.
+      "com.bambulab.BambuStudio"
       "org.freedesktop.Platform.GL.nvidia-595-104-02"
       "org.freedesktop.Platform.GL32.nvidia-595-104-02"
     ];
