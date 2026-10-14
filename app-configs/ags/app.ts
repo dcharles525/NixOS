@@ -1,5 +1,5 @@
-import { App, Astal, Gdk } from "astal/gtk4"
-import { exec } from "astal"
+import { App, Astal, Gdk, Gtk } from "astal/gtk4"
+import { exec, timeout } from "astal"
 import style from "./style.scss"
 import Hello from "./widget/Hello"
 import Media from "./widget/Media"
@@ -39,6 +39,32 @@ function hideAll() {
   for (const w of App.get_windows()) w.set_visible(false)
 }
 
+// Popover windows keyed by monitor connector, so hotplug can add and drop
+// a whole set at once.
+const perMonitor = new Map<string, Gtk.Window[]>()
+
+function syncMonitors() {
+  const live = new Set<string>()
+  for (const m of App.get_monitors()) {
+    const conn = m.connector
+    if (!conn) continue
+    live.add(conn)
+    if (perMonitor.has(conn)) continue
+    perMonitor.set(conn, [
+      Hello(m),
+      Media(m),
+      Bluetooth(m),
+      Wifi(m),
+      System(m),
+    ] as Gtk.Window[])
+  }
+  for (const [conn, wins] of perMonitor) {
+    if (live.has(conn)) continue
+    wins.forEach((w) => w.destroy())
+    perMonitor.delete(conn)
+  }
+}
+
 App.start({
   css: style,
   requestHandler(request, res) {
@@ -67,12 +93,14 @@ App.start({
     }
   },
   main() {
-    App.get_monitors().forEach((m) => {
-      Hello(m)
-      Media(m)
-      Bluetooth(m)
-      Wifi(m)
-      System(m)
+    syncMonitors()
+    // Windows are per-monitor, so a monitor plugged in after startup has
+    // none and toggles log `no window with name ...`. Rebuild on hotplug.
+    // The connector can be unset when the signal fires, so retry shortly.
+    const monitors = Gdk.Display.get_default()!.get_monitors()
+    monitors.connect("items-changed", () => {
+      syncMonitors()
+      timeout(500, syncMonitors)
     })
   },
 })
