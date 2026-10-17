@@ -229,6 +229,17 @@ in
     settings.StartupNotify = "false";
   };
 
+  # Mind: the llm-skills card stack in a Chromium --app window.
+  xdg.desktopEntries.mind = {
+    name = "Mind";
+    comment = "Card stack, open items and repo map";
+    exec = "/home/d/Documents/Project/LLM/llm-skills/tools/mind app";
+    icon = "${./assets/mind.png}";
+    terminal = false;
+    categories = [ "Utility" ];
+    settings.StartupWMClass = "mind";
+  };
+
   services.udiskie = {
     enable = true;
   };
