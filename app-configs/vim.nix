@@ -10,6 +10,7 @@
       vimrcConfig.packages.myplugins = with pkgs.vimPlugins; {
         start = [ nerdtree vim-go vim-nix vim-lastplace vim-airline gruvbox ale editorconfig-vim
           vim-indent-guides copilot-vim zig-vim
+          vim-gitgutter vim-fugitive
           (pkgs.vimUtils.buildVimPlugin {
             name = "vim-ai";
             src = pkgs.fetchFromGitHub {
@@ -67,6 +68,15 @@
         let g:vim_ai_token_file_path = '~/.config/openai.token'
 
         let g:ctrlsf_position = 'bottom'
+
+        " Change tracking: gutter signs against the git index, live.
+        " ]c / [c jump hunks, <leader>hp preview, hs stage, hu undo.
+        " :Gdiffsplit (fugitive) for a side-by-side review.
+        set updatetime=100
+        set signcolumn=yes
+        let g:gitgutter_preview_win_floating = 1
+        nnoremap <leader>hl :GitGutterLineHighlightsToggle<CR>
+        nnoremap <leader>hq :GitGutterQuickFix \| copen<CR>
 
         let g:vim_ai_chat = {
           \  "options": {
