@@ -90,10 +90,10 @@ in
         };
 
         "pulseaudio" = {
-          format = "{icon}  {volume}%";
+          format = "{icon} {volume}%";
           format-bluetooth = "{icon} {volume}%";
-          format-muted = "  Muted";
-          format-bluetooth-muted = "  Muted";
+          format-muted = " Muted";
+          format-bluetooth-muted = " Muted";
           format-icons = {
             headphone = "";
             hands-free = "";
@@ -123,7 +123,7 @@ in
         };
 
         "network" = {
-          format-wifi = "   {essid} ({signalStrength}%)";
+          format-wifi = "󰖩 {essid} ({signalStrength}%)";
           format-ethernet = "Ethernet ";
           tooltip-format = "{ifname} via {gwaddr} ";
           format-linked = "{ifname} (No IP) ";
@@ -143,7 +143,7 @@ in
           on-click-right = "${pkgs.overskride}/bin/overskride";
         };
         "cpu" = {
-            format = "󰟀  {usage}%";
+            format = "󰟀 {usage}%";
             on-click = "ags request 'toggle system'";
         };
         "battery" = {
@@ -153,20 +153,20 @@ in
               warning = 30;
               critical = 15;
             };
-            format = "{icon}  {capacity}%";
-            format-full = "{icon}  {capacity}%";
-            format-charging =  "  {capacity}%";
-            format-plugged = "  {capacity}%";
-            format-alt = "{time}  {icon}";
+            format = "{icon} {capacity}%";
+            format-full = "{icon} {capacity}%";
+            format-charging =  " {capacity}%";
+            format-plugged = " {capacity}%";
+            format-alt = "{time} {icon}";
             format-icons = ["" "" "" "" ""];
         };
         "clock" = {
-          format = "{:%H:%M | %e %B} ";
+          format = "{:%H:%M | %e %B}";
           tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
           format-alt = "{:%Y-%m-%d}";
         };
         "custom/suspend" = {
-          format = "⏾";
+          format = "󰤄";
           # Desktop uses hibernate — s2idle keeps fans/RGB lit and S3 hard-freezes
           # on this NVIDIA box (3x confirmed). Ktop stays on plain suspend since
           # its LUKS-encrypted swap makes hibernate unreliable.
@@ -174,7 +174,7 @@ in
           on-click = "loginctl lock-session && sleep 1 && systemctl ${if host == "desktop" then "hibernate" else "suspend"}";
         };
         "custom/poweroff" = {
-          format = "⏻ ";
+          format = "󰐥";
           tooltip-format = "Darkness";
           on-click = "exec systemctl poweroff";
         };
@@ -279,6 +279,17 @@ in
         border-radius: 999px;
       }
 
+      /* Icon-only buttons: no label to balance, so half the padding.
+         The Mono variant keeps each glyph inside its advance; the
+         regular Nerd Font lets them overflow by different amounts. */
+      #custom-mirror,
+      #custom-suspend,
+      #custom-poweroff {
+        padding: 2px 6px;
+        font-family: "JetBrainsMono Nerd Font Mono";
+        font-size: 16px;
+      }
+
       /* Hover inverts: ink ground, black text. */
       #clock:hover,
       #battery:hover,
@@ -378,13 +389,20 @@ in
 
       STATE_FILE="/tmp/hypr-mirror-hdmi"
 
+      # The Lua config rejects `hyprctl keyword`; eval takes Lua and exits
+      # non-zero on error, so the state file only moves when Hyprland agreed.
+      # hl.monitor merges into the existing rule, so mirror must be cleared
+      # explicitly; leaving it out keeps the output mirrored.
+      EXTEND='output = "HDMI-A-1", mode = "2560x1440@144",
+          position = "-2560x0", scale = 1, mirror = ""'
+      MIRROR='output = "HDMI-A-1", mode = "preferred",
+          position = "auto", scale = 1, mirror = "eDP-1"'
+
       toggle() {
           if [ -f "$STATE_FILE" ]; then
-              hyprctl keyword monitor "HDMI-A-1,2560x1440@144,-2560x0,1"
-              rm -f "$STATE_FILE"
+              hyprctl eval "hl.monitor({ $EXTEND })" && rm -f "$STATE_FILE"
           else
-              hyprctl keyword monitor "HDMI-A-1,preferred,auto,1,mirror,eDP-1"
-              touch "$STATE_FILE"
+              hyprctl eval "hl.monitor({ $MIRROR })" && touch "$STATE_FILE"
           fi
       }
 

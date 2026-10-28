@@ -49,7 +49,7 @@ if [ -n "$fh_reset" ] && [ "$now" -ge "$fh_reset" ]; then
 fi
 
 # Headline is the 5h session % only, to keep the bar clean; weekly is in the tooltip.
-text="$ICON  $(round "${fh_pct:-0}")%"
+text="$ICON $(round "${fh_pct:-0}")%"
 
 tooltip=$(printf '5h window  %s%%  resets %s\nweekly     %s%%  resets %s\nofficial · captured %s%s' \
   "$(round "${fh_pct:-0}")" "$(at "$fh_reset" '%H:%M')" \

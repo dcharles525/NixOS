@@ -491,6 +491,7 @@ in
     lazygit
     gh
     azure-cli
+    terraform
 
     # Clipboard
     wl-clipboard

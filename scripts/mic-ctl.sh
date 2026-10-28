@@ -27,11 +27,11 @@ case "$action" in
         [ -z "$src" ] && exit 0
         muted=$(pactl get-source-mute "$src" 2>/dev/null | awk '{print $2}')
         if [ "$muted" = "yes" ]; then
-            printf "\xef\x84\xb1   Muted\n"
+            printf "\xef\x84\xb1 Muted\n"
         else
             vol=$(pactl get-source-volume "$src" 2>/dev/null \
                 | head -1 | grep -oE '[0-9]+%' | head -1 | tr -d '%')
-            printf "\xef\x84\xb0  %d%%\n" "${vol:-0}"
+            printf "\xef\x84\xb0 %d%%\n" "${vol:-0}"
         fi
         ;;
     mute)
